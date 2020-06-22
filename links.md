@@ -8,3 +8,9 @@
 
 # Image Classification
 * [Neural Network implementation that can perform image classification](https://github.com/ltpitt/python-jupyter-image-classification)
+
+# Papers with Code:
+* [General:](https://paperswithcode.com/task/breast-cancer-histology-image-classification)
+* [Deep Convolutional Neural Networks for Breast Cancer Histology Image Analysis](https://paperswithcode.com/paper/deep-convolutional-neural-networks-for-breast#code)
+* [Two-Stage Convolutional Neural Network for Breast Cancer Histology Image Classification](https://paperswithcode.com/paper/two-stage-convolutional-neural-network-for)
+* [Regression Concept Vectors for Bidirectional Explanations in Histopathology](https://paperswithcode.com/paper/regression-concept-vectors-for-bidirectional)
