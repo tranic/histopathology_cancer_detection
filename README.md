@@ -6,7 +6,7 @@ Deep Learning Project for HPI SS2020https://www.kaggle.com/c/histopathologic-can
 https://colab.research.google.com/drive/19t2H-3OFbJGcupUt7txMeErso5RnV-CF?usp=sharing
 
 ## Link to overleaf
-https://www.overleaf.com/project/5ef9043363cb69000108e811
+https://www.overleaf.com/9573728421hjwqmhvqhksk
 
 
 ## Assignemnt
