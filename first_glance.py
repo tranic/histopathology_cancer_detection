@@ -6,14 +6,10 @@ from d2l import torch as d2l
 
 # load a small data set
 def load_data(path, batchsize, num_workers, ids=-1):
-    image_ids = ids
-    y = []  # labels
-
     dataset = torchvision.datasets.ImageFolder(
         root = path,
         transform = torchvision.transforms.ToTensor()
     )
-
     loader = DataLoader(dataset=dataset, batch_size=batchsize, num_workers=num_workers, shuffle=True)
     return loader
 
@@ -48,9 +44,10 @@ def train_model(net, train_iter, test_iter, num_epochs, lr,
     print('training on', device)
     net.to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=lr)
-    loss = nn.CrossEntropyLoss()
+    loss = nn.BCELoss() # nn.CrossEntropyLoss()
     animator = d2l.Animator(xlabel='epoch', xlim=[0, num_epochs],
                             legend=['train loss', 'train acc', 'test acc'])
+
     timer = d2l.Timer()
     for epoch in range(num_epochs):
         metric = d2l.Accumulator(3)  # train_loss, train_acc, num_examples
@@ -60,24 +57,29 @@ def train_model(net, train_iter, test_iter, num_epochs, lr,
             optimizer.zero_grad()
             X, y = X.to(device), y.to(device)
             output = net(X)
-            y_hat = torch.round(torch.exp(output)/(1+torch.exp(output)))
-            l = loss(y_hat, y)
+            # y_hat = torch.round(torch.exp(output)/(1+torch.exp(output)))
+            y_hat = torch.sigmoid(output)
+            y = y.to(torch.float)
+            y = torch.unsqueeze(y,1)
+            l = loss(y_hat, y.type(torch.float32)) #.type(torch.float32)
             l.backward()
             optimizer.step()
             with torch.no_grad():
                 metric.add(l * X.shape[0], d2l.accuracy(y_hat, y), X.shape[0])
             timer.stop()
             train_loss, train_acc = metric[0] / metric[2], metric[1] / metric[2]
+            y_h = torch.exp(y_hat)/(1+torch.exp(y_hat))
             if (i + 1) % 50 == 0:
                 animator.add(epoch + i / len(train_iter),
                              (train_loss, train_acc, None))
+                print("BatchNo.=%3i, Epoch No.=%3i, loss=%.3f, train acc=%.3f" % (
+                i + 1, epoch + 1, train_loss, train_acc))
         # test_acc = evaluate_accuracy_gpu(net, test_iter) TODO: add test data loader
         # animator.add(epoch + 1, (None, None, test_acc))
     print('loss %.3f, train acc %.3f' % ( # , test acc %.3f
         train_loss, train_acc))# , test_acc
     print('%.1f examples/sec on %s' % (
         metric[2] * num_epochs / timer.sum(), device))
-
 
 
 def evaluate_accuracy_gpu(net, data_iter, device=None): #@save
@@ -91,19 +93,15 @@ def evaluate_accuracy_gpu(net, data_iter, device=None): #@save
 
 if __name__ == '__main__':
     ### params ---------------------------------------------------------------------------------------------------------
-    data_path = "data/train/"
+    data_path = "data/subset_train/"
     batchsize = 128
     image_ids = []
     load_num_workers = 0
     ### ----------------------------------------------------------------------------------------------------------------
 
     # TODO: maybe crop images before (e.g., to 48x48)
-
-    train_iter = load_data(path="data/subset_train", batchsize=batchsize, num_workers=load_num_workers)
-    # TODO: debug "loss 0.000, train acc 128.000"
+    train_iter = load_data(path=data_path, batchsize=batchsize, num_workers=load_num_workers)
     # test_iter =
     net = get_lenet()
-
     ## TODO: explore data (num images, class distribution)
-
     train_model(net, train_iter, "placeholder", 20, 0.9)
