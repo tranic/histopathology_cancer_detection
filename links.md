@@ -15,3 +15,7 @@
 * [Two-Stage Convolutional Neural Network for Breast Cancer Histology Image Classification](https://paperswithcode.com/paper/two-stage-convolutional-neural-network-for)
 * [Regression Concept Vectors for Bidirectional Explanations in Histopathology](https://paperswithcode.com/paper/regression-concept-vectors-for-bidirectional)
 * [Histopathologic cancer detection as image classification using Pytorch](https://medium.com/@sergeykolchenko/histopathologic-cancer-detection-as-image-classification-using-pytorch-557aab058449)
+
+# Normalization
+* [A method for normalizing histology slides for quantitative analysis](https://ieeexplore.ieee.org/document/5193250)
+
