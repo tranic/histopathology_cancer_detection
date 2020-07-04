@@ -18,3 +18,6 @@
 
 # Preprocessing
 * [H&E stain augmentation](https://www.researchgate.net/figure/H-E-stain-augmentation-From-left-to-right-first-an-RGB-patch-is-decomposed-into_fig4_324073594)
+
+# Normalization
+* [A method for normalizing histology slides for quantitative analysis](https://ieeexplore.ieee.org/document/5193250)
