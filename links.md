@@ -16,6 +16,8 @@
 * [Regression Concept Vectors for Bidirectional Explanations in Histopathology](https://paperswithcode.com/paper/regression-concept-vectors-for-bidirectional)
 * [Histopathologic cancer detection as image classification using Pytorch](https://medium.com/@sergeykolchenko/histopathologic-cancer-detection-as-image-classification-using-pytorch-557aab058449)
 
+# Preprocessing
+* [H&E stain augmentation](https://www.researchgate.net/figure/H-E-stain-augmentation-From-left-to-right-first-an-RGB-patch-is-decomposed-into_fig4_324073594)
+
 # Normalization
 * [A method for normalizing histology slides for quantitative analysis](https://ieeexplore.ieee.org/document/5193250)
-
