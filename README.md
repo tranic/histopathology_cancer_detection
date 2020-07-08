@@ -21,3 +21,8 @@ Dataset: https://www.kaggle.com/c/histopathologic-cancer-detection/data
 * Nicolas Alder
 * Christian Warmuth
 * Nataniel Müller
+
+
+## Documentation/Paper Textdump
+
+https://docs.google.com/document/d/1scWCrD1vJ6XMQ_eUNVilpAPyW2Cy8Vo2zxv7DmZBodM/edit?usp=sharing
