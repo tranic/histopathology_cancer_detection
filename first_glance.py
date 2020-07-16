@@ -1,10 +1,13 @@
+import os
 import torch
 import torchvision
 from torch.utils.data import DataLoader
 from torch import nn
 from d2l import torch as d2l
 
-# load a small data set
+from data_loading import HistopathDataset, ToTensor
+
+
 def load_data(path, batchsize, num_workers, ids=-1):
     dataset = torchvision.datasets.ImageFolder(
         root = path,
@@ -13,14 +16,14 @@ def load_data(path, batchsize, num_workers, ids=-1):
     loader = DataLoader(dataset=dataset, batch_size=batchsize, num_workers=num_workers, shuffle=True)
     return loader
 
-"""
+
 class Reshape(torch.nn.Module):
     def forward(self, x):
-        return x.view(-1,1,96,96)"""
+        return x.view(-1,3,96,96)
 
 def get_lenet():
     net = torch.nn.Sequential(
-        # Reshape(),
+        Reshape(),
         nn.Conv2d(3, 6, kernel_size=5, padding=2), nn.Sigmoid(),
         nn.AvgPool2d(kernel_size=2, stride=2),
         nn.Conv2d(6, 16, kernel_size=5), nn.Sigmoid(),
@@ -44,7 +47,7 @@ def train_model(net, train_iter, test_iter, num_epochs, lr,
     print('training on', device)
     net.to(device)
     optimizer = torch.optim.SGD(net.parameters(), lr=lr)
-    loss = nn.BCELoss() # nn.CrossEntropyLoss()
+    loss = nn.BCELoss()
     animator = d2l.Animator(xlabel='epoch', xlim=[0, num_epochs],
                             legend=['train loss', 'train acc', 'test acc'])
 
@@ -55,6 +58,7 @@ def train_model(net, train_iter, test_iter, num_epochs, lr,
             timer.start()
             net.train()
             optimizer.zero_grad()
+            X = X.float()
             X, y = X.to(device), y.to(device)
             output = net(X)
             # y_hat = torch.round(torch.exp(output)/(1+torch.exp(output)))
@@ -68,16 +72,16 @@ def train_model(net, train_iter, test_iter, num_epochs, lr,
                 metric.add(l * X.shape[0], d2l.accuracy(y_hat, y), X.shape[0])
             timer.stop()
             train_loss, train_acc = metric[0] / metric[2], metric[1] / metric[2]
-            y_h = torch.exp(y_hat)/(1+torch.exp(y_hat))
             if (i + 1) % 50 == 0:
                 animator.add(epoch + i / len(train_iter),
                              (train_loss, train_acc, None))
                 print("BatchNo.=%3i, Epoch No.=%3i, loss=%.3f, train acc=%.3f" % (
                 i + 1, epoch + 1, train_loss, train_acc))
-        # test_acc = evaluate_accuracy_gpu(net, test_iter) TODO: add test data loader
-        # animator.add(epoch + 1, (None, None, test_acc))
-    print('loss %.3f, train acc %.3f' % ( # , test acc %.3f
-        train_loss, train_acc))# , test_acc
+        test_acc = evaluate_accuracy_gpu(net, test_iter)
+        print("test_acc=", test_acc)
+        animator.add(epoch + 1, (None, None, test_acc))
+    print('loss %.3f, train acc %.3f, test acc %.3f' % (
+        train_loss, train_acc, test_acc))
     print('%.1f examples/sec on %s' % (
         metric[2] * num_epochs / timer.sum(), device))
 
@@ -87,21 +91,32 @@ def evaluate_accuracy_gpu(net, data_iter, device=None): #@save
         device = next(iter(net.parameters())).device
     metric = d2l.Accumulator(2)  # num_corrected_examples, num_examples
     for X, y in data_iter:
+        X = X.float()
         X, y = X.to(device), y.to(device)
-        metric.add(d2l.accuracy(net(X), y), sum(y.shape))
-    return metric[0] / metric[1]
+        # metric.add(d2l.accuracy(torch.sigmoid(net(X)), y), sum(y.shape))
+        acc = (torch.round(torch.sigmoid(net(X)).squeeze()) == y).sum().item() / len(y)
+    # return metric[0] / metric[1]
+    return acc
 
 if __name__ == '__main__':
-    ### params ---------------------------------------------------------------------------------------------------------
-    data_path = "data/subset_train/"
-    batchsize = 128
-    image_ids = []
-    load_num_workers = 0
-    ### ----------------------------------------------------------------------------------------------------------------
+    # TODO: maybe crop images before (e.g., to 48x48)"""
 
-    # TODO: maybe crop images before (e.g., to 48x48)
-    train_iter = load_data(path=data_path, batchsize=batchsize, num_workers=load_num_workers)
-    # test_iter =
+    ### using new data loader and new data split ###
+    num_workers = 0
+    batchsize = 128
+    # create train and test data sets
+    dataset_train = HistopathDataset(
+        label_file=os.path.abspath("data/train_split.csv"),
+        root_dir=os.path.abspath("data/train"),
+        transform=ToTensor())
+
+    dataset_test = HistopathDataset(
+        label_file=os.path.abspath("data/test_split.csv"),
+        root_dir=os.path.abspath("data/train"),
+        transform=ToTensor())
+
+    train_loader = DataLoader(dataset_train, batch_size=batchsize, shuffle=True, num_workers=num_workers)
+    test_loader = DataLoader(dataset_test, batch_size=batchsize, shuffle=True, num_workers=num_workers)
+
     net = get_lenet()
-    ## TODO: explore data (num images, class distribution)
-    train_model(net, train_iter, "placeholder", 20, 0.9)
+    train_model(net, train_loader, test_loader, 10, 0.9)
