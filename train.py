@@ -1,71 +1,77 @@
-
-from test import *
-from architecture import MyModule
+from architecture import LeNet
+from data_loading import HistopathDataset, ToTensor
 
 import numpy as np
 from sklearn.datasets import make_classification
 from torch import nn
-from skorch import NeuralNetClassifier
+from skorch import NeuralNet
 from sklearn.externals import joblib
 from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
 from sklearn import metrics
 import pickle
 import torch
+import os
 
 ################
 ## Data Loader
-################
+################    
 
-X, y = make_classification(1000, 20, n_informative=10, random_state=0)
-X = X.astype(np.float32)
-y = y.astype(np.int64)
+### using new data loader and new data split ###
+# create train and test data sets
+dataset_train = HistopathDataset(
+    label_file=os.path.abspath("data/train_split.csv"),
+    root_dir=os.path.abspath("data/train"),
+    transform=ToTensor())
+
+dataset_test = HistopathDataset(
+    label_file=os.path.abspath("data/test_split.csv"),
+    root_dir=os.path.abspath("data/train"),
+    transform=ToTensor())
+
+# print(dataset_train.__getitem__(1))
 
 ######################
 # Definition of Net(s)
 ######################
 
-net = NeuralNetClassifier(
-    MyModule,
-    max_epochs=10,
-    lr=0.1,
-    # Shuffle training data on each epoch
-    iterator_train__shuffle=True,
-    device='cuda'
+net = NeuralNet(
+    LeNet,
+    criterion = nn.NLLLoss, # default can be changed to whatever we need
+    optimizer = torch.optim.SGD, # default can be changed to whatever we need
+    max_epochs = 2,
+    lr = 0.1,
+    batch_size = 128,
+    iterator_train__shuffle = True, # Shuffle training data on each epoch
+    train_split = None,
+    callbacks = None, # build custom callback for plotting of loss/ accuracy, etc 
+    # <-- not sure how well this integrates with the d2l plotting thing though
+    # look at current on epoch end implementation to not lose fancy table output!
+    device ='cpu'
 )
 
-######################
-# Pipeline-Definition
-######################
-
-net.set_params(train_split=False, verbose=0)
-params = {
-    'lr': [0.01, 0.02],
-    'max_epochs': [10],
-    'module__num_units': [30, 50],
-}
 
 ######################
-# Randomized Search
+# Model Training
 ######################
 
+net.fit(dataset_train)
+# print("Model-Params: {}".format(net.get_params()))
 
-gs = RandomizedSearchCV(net, params, refit=True, cv=3, scoring='accuracy', verbose=0, n_jobs=4)
-gs.fit(X, y)
-print("Best score: {:.3f}, Best params: {}".format(gs.best_score_, gs.best_params_))
-print(gs.best_params_)
+# doesn't work, have to implement this ourselves 
+# print("Mean test accuracy: {}".format(net.score(dataset_test)))
 
 
 ######################
 # Model Saving
 ######################
 
-torch.save(gs.best_estimator_, 'test.pt')
+# torch.save(gs.best_estimator_, 'test.pt')
 
 ######################
 # Model Loading
 ######################
 
-model = torch.load('test.pt')
-print(model)
+# model = torch.load('test.pt')
+# print(model)
 
 
