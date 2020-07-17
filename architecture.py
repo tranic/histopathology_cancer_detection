@@ -1,23 +1,5 @@
 from torch import nn
-
-
-class SimpleTestNet(nn.Module):
-    def __init__(self, num_units=10, nonlin=nn.ReLU()):
-        super(SimpleTestNet, self).__init__()
-
-        self.dense0 = nn.Linear(20, num_units)
-        self.nonlin = nonlin
-        self.dropout = nn.Dropout(0.5)
-        self.dense1 = nn.Linear(num_units, num_units)
-        self.output = nn.Linear(num_units, 2)
-        self.softmax = nn.Softmax(dim=-1)
-
-    def forward(self, X, **kwargs):
-        X = self.nonlin(self.dense0(X))
-        X = self.dropout(X)
-        X = self.nonlin(self.dense1(X))
-        X = self.softmax(self.output(X))
-        return X
+from torchvision import models
 
 
 class LeNet(nn.Module):
@@ -48,20 +30,53 @@ class LeNet(nn.Module):
         X = self.flatten(X)
         X = self.nonlin(self.linear_4(X))
         X = self.nonlin(self.linear_5(X))
+        
         X = self.softmax(self.output(X))
         
         return X
 
-def get_lenet():
-    net = torch.nn.Sequential(
-        Reshape(),
-        nn.Conv2d(3, 6, kernel_size=5, padding=2), nn.Sigmoid(),
-        nn.AvgPool2d(kernel_size=2, stride=2),
-        nn.Conv2d(6, 16, kernel_size=5), nn.Sigmoid(),
-        nn.AvgPool2d(kernel_size=2, stride=2),
-        nn.Flatten(),
-        nn.Linear(16 * 22 * 22, 120), nn.Sigmoid(), # TODO: add more Conv Layers before
-        nn.Linear(120, 10), nn.Sigmoid(),
-        nn.Linear(10, 1)) # one output as we only have one (positive) class
-    return net
+
+class DensNet121(nn.Module):
+    def __init__(self):
+        super(DensNet121, self).__init__()
+        base_net = models.densenet121(pretrained = False)
+        
+        self.sigmoid = nn.Sigmoid()
+        self.features = base_net.features
+        
+        self.features.conv0 = nn.Conv2d(3, 64, kernel_size = 3, stride = 2, padding = 1, bias = False)
+        self.features.norm0 = nn.BatchNorm2d(64)
+        self.features.relu0 = nn.ReLU(inplace = True)
+        
+        self.dense121_relu = nn.ReLU(inplace = True)
+        self.dense121_pool = nn.AdaptiveAvgPool2d((1, 1))
+        
+        
+        # maybe rename to something else, only c3 is the actually classifier
+        self.classifier0 = nn.Linear(1024, 512) 
+        self.classifier1 = nn.Dropout(p = 0.1)
+        self.classifier2 = nn.ReLU()
+        self.classifier3 = nn.Linear(512, 1)
+       
+        del base_net
+        
+    def forward(self, X):
+        X = X.view(-1, 3, 96, 96).float()
+        
+        X = self.features(X)
+    
+        # Convert output of predifined dense121 layers to a format that can used by the classifier "layers"
+        X = self.dense121_relu(X)
+        X = self.dense121_pool(X)
+        X = X.view(X.size(0), -1)
+        
+        X = self.classifier0(X)
+        X = self.classifier1(X)
+        X = self.classifier2(X)
+        X = self.classifier3(X)
+        
+        X = self.sigmoid(X)
+        
+        return X
  
+    

@@ -4,6 +4,7 @@ from torch.utils.data import Dataset, DataLoader
 import os
 import skimage.io as io
 import matplotlib.pyplot as plt
+import numpy as np
 
 class HistopathDataset(Dataset):
     """ Histopathologic Cancer Dataset that represents a map from keys to data samples."""
@@ -46,10 +47,10 @@ class ToTensor(object):
     def __call__(self, sample):
         image, label = sample[0], sample[1]
 
-        # numpy image: H x W x C
+        # numpy image: H x W x Cß
         # torch image: C X H X W
         image = image.transpose((2, 0, 1)) # for colored images
-        return (torch.from_numpy(image), label)
+        return (torch.from_numpy(image), label.astype(np.float32))
 
 if __name__ == '__main__':
     ## Example on how to use the HistopathDataset class
