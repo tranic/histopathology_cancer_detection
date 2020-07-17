@@ -12,6 +12,11 @@ import pickle
 import torch
 import os
 
+
+from skorch.utils import get_dim
+from skorch.utils import is_dataset
+from torch.utils.data import DataLoader
+
 ################
 ## Data Loader
 ################    
@@ -74,6 +79,27 @@ le_net = NeuralNet(
     # look at current on epoch end implementation to not lose fancy table output!
     device ='cpu'
 ) 
+
+
+# this is only temporary monekey patching, we should probably inherit class and just overwrite this single method
+def custom_check_data(self, X, y):
+        # super().check_data(X, y)
+        if (
+                (y is None) and
+                (not is_dataset(X)) and
+                (self.iterator_train is DataLoader)
+        ): 
+            msg = ("No y-values are given (y=None). You must either supply a "
+                   "Dataset as X or implement your own DataLoader for "
+                   "training (and your validation) and supply it using the "
+                   "``iterator_train`` and ``iterator_valid`` parameters "
+                   "respectively.")
+            raise ValueError(msg)
+        
+        if y is not None and get_dim(y) != 1:
+            raise ValueError("The target data should be 1-dimensional.")
+
+NeuralNetBinaryClassifier.check_data = custom_check_data
 
 
 dens_net_121 = NeuralNetBinaryClassifier(
