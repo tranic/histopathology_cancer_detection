@@ -4,7 +4,12 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 import os
 import skimage.io as io
+<<<<<<< HEAD
 from skimage import transform
+=======
+import matplotlib.pyplot as plt
+import numpy as np
+>>>>>>> 67c66e1... Adds DenseNet121
 
 class HistopathDataset(Dataset):
     """ Histopathologic Cancer Dataset that represents a map from keys to data samples."""
@@ -47,10 +52,11 @@ class ToTensor(object):
     def __call__(self, sample):
         image, label = sample
 
-        # numpy image: H x W x C
+        # numpy image: H x W x Cß
         # torch image: C X H X W
         image = image.transpose((2, 0, 1)) # for colored images
-        return torch.from_numpy(image), label
+        
+        return (torch.from_numpy(image), label.astype(np.float32))
 
 class Normalize(object):
     """ Normalize a tensor(!) image with mean (type=sequence) and standard deviation (type=sequence) for each channel.

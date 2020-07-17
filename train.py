@@ -1,4 +1,4 @@
-from architecture import LeNet
+from architecture import LeNet, DensNet121
 from data_loading import HistopathDataset, ToTensor
 
 import numpy as np
@@ -34,7 +34,7 @@ dataset_test = HistopathDataset(
 # Definition of Net(s)
 ######################
 
-net = NeuralNet(
+le_net = NeuralNet(
     LeNet,
     criterion = nn.NLLLoss, # default can be changed to whatever we need
     optimizer = torch.optim.SGD, # default can be changed to whatever we need
@@ -50,11 +50,28 @@ net = NeuralNet(
 )
 
 
+dens_net_121 = NeuralNet(
+    DensNet121,
+    criterion = nn.BCELoss, # default can be changed to whatever we need
+    optimizer = torch.optim.Adam,
+    optimizer__weight_decay = 0,
+    max_epochs = 2,
+    lr = 0.01,
+    batch_size = 128,
+    iterator_train__shuffle = True, # Shuffle training data on each epoch
+    train_split = None,
+    callbacks = None, # build custom callback for plotting of loss/ accuracy, etc 
+    # <-- not sure how well this integrates with the d2l plotting thing though
+    # look at current on epoch end implementation to not lose fancy table output!
+    device ='cpu'
+)
+
+
 ######################
 # Model Training
 ######################
 
-net.fit(dataset_train)
+dens_net_121.fit(dataset_train)
 # print("Model-Params: {}".format(net.get_params()))
 
 # doesn't work, have to implement this ourselves 
