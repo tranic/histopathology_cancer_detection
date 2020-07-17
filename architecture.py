@@ -36,11 +36,9 @@ class LeNet(nn.Module):
         return X
 
 
-class DensNet121(nn.Module):
+class DenseNet121(nn.Module):
     def __init__(self):
-        super(DensNet121, self).__init__()
-        
-        self.cp = 0
+        super(DenseNet121, self).__init__()
         
         # Load dene121 net 
         base_net = models.densenet121(pretrained = False)
@@ -81,8 +79,6 @@ class DensNet121(nn.Module):
         X = self.classifier1(X)
         X = self.classifier2(X)
         X = self.classifier3(X)
-        
-        X = self.sigmoid(X)
         
         return X
  
