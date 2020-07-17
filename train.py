@@ -1,12 +1,11 @@
-from architecture import LeNet, DensNet121
+from architecture import LeNet, DenseNet121
 from data_loading import HistopathDataset, ToTensor
 
 import numpy as np
 from sklearn.datasets import make_classification
 from torch import nn
-from skorch import NeuralNet
+from skorch import NeuralNet, NeuralNetBinaryClassifier
 import skorch.callbacks as scb
-from sklearn.externals import joblib
 from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
 from sklearn import metrics
 import pickle
@@ -32,11 +31,30 @@ dataset_test = HistopathDataset(
 # print(dataset_train.__getitem__(1))
 
 
+
+
 # TODO define grid search loop
 # Option 1: try all combinations
 # Option 2: combinations are defined by positions in arrays
 
 # Path to files needs to be definable for easy use in colab 
+
+
+######################
+# Definition of Scoring Methods
+######################
+
+def test_accuracy(net, X = None, y=None):
+    y = [y for _, y in dataset_test]
+    y_hat = net.predict(dataset_test)
+    return metrics.accuracy_score(y, y_hat)
+
+
+def train_accuracy(net, ds, y=None):
+    y = [y for _, y in ds]
+    y_hat = net.predict(ds)
+    return metrics.accuracy_score(y, y_hat)
+
 
 ######################
 # Definition of Net(s)
@@ -55,33 +73,28 @@ le_net = NeuralNet(
     # <-- not sure how well this integrates with the d2l plotting thing though
     # look at current on epoch end implementation to not lose fancy table output!
     device ='cpu'
-)
+) 
 
 
-def ds_accuracy(net, ds, y=None):
-    y_true = [y for _, y in ds]
-    y_pred = net.predict(ds)
-    return metrics.accuracy_score(y_true, y_pred)
-
-
-dens_net_121 = NeuralNet(
-    DensNet121,
-    criterion = nn.BCELoss, # default can be changed to whatever we need
-    optimizer = torch.optim.Adam, # how to use sheduler here?
+dens_net_121 = NeuralNetBinaryClassifier(
+    DenseNet121,
+    criterion = nn.BCEWithLogitsLoss, # default can be changed to whatever we need
+    optimizer = torch.optim.Adam, 
     optimizer__weight_decay = 0,
-    max_epochs = 1,
+    max_epochs = 100,
     lr = 0.01,
-    batch_size = 128,
+    batch_size = 64,
     iterator_train__shuffle = True, # Shuffle training data on each epoch
     train_split = None,
-    callbacks = [scb.EpochScoring(ds_accuracy, 
+    callbacks = [scb.LRScheduler(policy='ExponentialLR', gamma = 0.9), # TODO check if this actually works 
+                 scb.EpochScoring(train_accuracy, 
                                   lower_is_better = False, 
                                   on_train = True, 
                                   use_caching=False),
+                 scb.EpochScoring(test_accuracy, 
+                                  lower_is_better = False, 
+                                  on_train = True), # not sure if caching should be disabled here or not ...
                  scb.ProgressBar()], 
-    # build custom callback for plotting of loss/ accuracy, etc 
-    # <-- not sure how well this integrates with the d2l plotting thing though
-    # look at current on epoch end implementation to not lose fancy table output!
     device ='cpu'
 )
 
@@ -90,7 +103,8 @@ dens_net_121 = NeuralNet(
 # Model Training
 ######################
 print("Starting with model training: ")
-dens_net_121.fit(dataset_train)
+dens_net_121.fit(X = dataset_train, y = None)
+
 # print("Model-Params: {}".format(net.get_params()))
 
 # doesn't work, have to implement this ourselves 
