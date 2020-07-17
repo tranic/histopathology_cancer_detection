@@ -39,11 +39,18 @@ class LeNet(nn.Module):
 class DensNet121(nn.Module):
     def __init__(self):
         super(DensNet121, self).__init__()
+        
+        self.cp = 0
+        
+        # Load dene121 net 
         base_net = models.densenet121(pretrained = False)
         
         self.sigmoid = nn.Sigmoid()
+        
+        # Exctract all dense121 layers for own use
         self.features = base_net.features
         
+        # Change input layer of dense121 to match our input sizeß
         self.features.conv0 = nn.Conv2d(3, 64, kernel_size = 3, stride = 2, padding = 1, bias = False)
         self.features.norm0 = nn.BatchNorm2d(64)
         self.features.relu0 = nn.ReLU(inplace = True)
