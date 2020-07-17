@@ -107,21 +107,23 @@ dens_net_121 = NeuralNetBinaryClassifier(
     criterion = nn.BCEWithLogitsLoss, # default can be changed to whatever we need
     optimizer = torch.optim.Adam, 
     optimizer__weight_decay = 0,
-    max_epochs = 100,
+    max_epochs = 20,
     lr = 0.01,
     batch_size = 64,
     iterator_train__shuffle = True, # Shuffle training data on each epoch
     train_split = None,
     callbacks = [scb.LRScheduler(policy='ExponentialLR', gamma = 0.9), # TODO check if this actually works 
-                 scb.EpochScoring(train_accuracy, 
-                                  lower_is_better = False, 
-                                  on_train = True, 
-                                  use_caching=False),
-                 scb.EpochScoring(test_accuracy, 
-                                  lower_is_better = False, 
-                                  on_train = True), # not sure if caching should be disabled here or not ...
+                 ('train_acc', scb.EpochScoring('accuracy',
+                                                name='train_acc',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                 ('test_acc', scb.EpochScoring(test_accuracy, 
+                                               name = 'test_acc',
+                                               lower_is_better = False,
+                                               on_train = True,
+                                               use_caching = False)), # not sure if caching should be disabled here or not ...                                             
                  scb.ProgressBar()], 
-    device ='cpu'
+    device ='cuda'
 )
 
 
@@ -129,7 +131,7 @@ dens_net_121 = NeuralNetBinaryClassifier(
 # Model Training
 ######################
 print("Starting with model training: ")
-dens_net_121.fit(X = dataset_train, y = None)
+dens_net_121.fit(X = dataset_train, y = None) # TODO print model parameters
 
 # print("Model-Params: {}".format(net.get_params()))
 
@@ -149,5 +151,3 @@ dens_net_121.fit(X = dataset_train, y = None)
 
 # model = torch.load('test.pt')
 # print(model)
-
-
