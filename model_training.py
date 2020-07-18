@@ -65,7 +65,7 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform):
         return metrics.accuracy_score(y, y_hat)
     
     
-    
+    # Test if scorings are allready attached
     classifier.callbacks.extend([
                  ('train_acc', scb.EpochScoring('accuracy',
                                                 name='train_acc',
@@ -87,7 +87,8 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform):
               \033[1mOptimizer:\033[0m     {}
               \033[1mLearning Rate:\033[0m {}
               \033[1mEpochs:\033[0m        {}
-              \033[1mBatch size:\033[0m    {}'''
+              \033[1mBatch size:\033[0m    {}
+              '''
           .format(classifier.module,
                   classifier.criterion,
                   classifier.optimizer,
