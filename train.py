@@ -54,13 +54,6 @@ def test_accuracy(net, X = None, y = None):
     y_hat = net.predict(dataset_test)
     return metrics.accuracy_score(y, y_hat)
 
-
-def train_accuracy(net, ds, y=None):
-    y = [y for _, y in ds]
-    y_hat = net.predict(ds)
-    return metrics.accuracy_score(y, y_hat)
-
-
 ######################
 # Definition of Net(s)
 ######################
@@ -123,7 +116,7 @@ dens_net_121 = NeuralNetBinaryClassifier(
                                                on_train = True,
                                                use_caching = False)), # not sure if caching should be disabled here or not ...                                             
                  scb.ProgressBar()], 
-    device ='cpu'
+    device ='cuda'
 )
 
 
@@ -132,8 +125,6 @@ dens_net_121 = NeuralNetBinaryClassifier(
 ######################
 print("Starting with model training: ")
 dens_net_121.fit(X = dataset_train, y = None) # TODO print model parameters
-
-dens_net_121.cal
 
 # print("Model-Params: {}".format(net.get_params()))
 

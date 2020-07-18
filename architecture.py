@@ -66,7 +66,6 @@ class DenseNet121(nn.Module):
         del base_net
         
     def forward(self, X):
-        
         X = X.view(-1, 3, 96, 96).float()
         
         X = self.features(X)

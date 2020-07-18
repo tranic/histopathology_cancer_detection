@@ -142,18 +142,18 @@ class  RandomHorizontalFlip(object):
         image = transforms.ToTensor()(image)
         return image, label
 
-if __name__ == '__main__':
-    ## Example on how to use the HistopathDataset class
-    num_workers = 0
-    batchsize = 128
+# if __name__ == '__main__':
+#     ## Example on how to use the HistopathDataset class
+#     num_workers = 0
+#     batchsize = 128
 
-    # create custom dataset
-    transformed_dataset = HistopathDataset(
-        label_file=os.path.abspath("data/train_labels.csv"),
-        root_dir=os.path.abspath("data/train"),
-        transform=transforms.Compose([ToTensor(),
-                                  Normalize(mean=[0.70017236, 0.5436771, 0.6961061],
-                                                       std=[0.22246036, 0.26757348, 0.19798167]), # did not verify those values
-                                  RandomRotation((-180, 180)),
-                                  RandomHorizontalFlip()]
-                                     ))
+#     # create custom dataset
+#     transformed_dataset = HistopathDataset(
+#         label_file=os.path.abspath("data/train_labels.csv"),
+#         root_dir=os.path.abspath("data/train"),
+#         transform=transforms.Compose([ToTensor(),
+#                                   Normalize(mean=[0.70017236, 0.5436771, 0.6961061],
+#                                                        std=[0.22246036, 0.26757348, 0.19798167]), # did not verify those values
+#                                   RandomRotation((-180, 180)),
+#                                   RandomHorizontalFlip()]
+#                                      ))
