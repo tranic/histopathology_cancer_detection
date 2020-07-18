@@ -1,10 +1,12 @@
-from skorch import NeuralNetBinaryClassifier
-from data_loading import HistopathDataset
-import skorch.callbacks as scb
-from sklearn import metrics
-import pickle
-import torch
 import os
+import uuid
+import skorch.callbacks as scb
+from skorch import NeuralNetBinaryClassifier
+from sklearn import metrics
+
+from data_loading import HistopathDataset
+
+
 
 
 from skorch.utils import get_dim
@@ -35,7 +37,7 @@ NeuralNetBinaryClassifier.check_data = custom_check_data
 
 
 
-def train_model(classifier, train_labels, test_lables, file_dir, transform):
+def train_model(classifier, train_labels, test_lables, file_dir, transform, output_path):
     
     ################
     ## Data Loader
@@ -102,14 +104,16 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform):
     # Model Saving
     ######################
     
-    # torch.save(gs.best_estimator_, 'test.pt')
+    # TODO save this id including the model params for easy retrival and loading
     
-    ######################
-    # Model Loading
-    ######################
+    print("Saving model...")
     
-    # model = torch.load('test.pt')
-    # print(model)
+    uid = uuid.uuid4()
+    
+    classifier.save_params(f_params = '{}/{}-model.pkl'.format(output_path, uid), 
+                           f_optimizer='{}/{}-opt.pkl'.format(output_path, uid), 
+                           f_history='{}/{}-history.json'.format(output_path, uid))
 
+    print("Saving completed...")
 
 
