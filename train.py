@@ -24,14 +24,14 @@ from torch.utils.data import DataLoader
 ### using new data loader and new data split ###
 # create train and test data sets
 dataset_train = HistopathDataset(
-    label_file=os.path.abspath("data/train_split.csv"),
-    root_dir=os.path.abspath("data/train"),
-    transform=ToTensor())
+    label_file = os.path.abspath("data/train_split.csv"),
+    root_dir = os.path.abspath("data/train"),
+    transform = ToTensor())
 
 dataset_test = HistopathDataset(
-    label_file=os.path.abspath("data/test_split.csv"),
-    root_dir=os.path.abspath("data/train"),
-    transform=ToTensor())
+    label_file = os.path.abspath("data/test_split.csv"),
+    root_dir = os.path.abspath("data/train"),
+    transform = ToTensor())
 
 # print(dataset_train.__getitem__(1))
 
@@ -49,7 +49,7 @@ dataset_test = HistopathDataset(
 # Definition of Scoring Methods
 ######################
 
-def test_accuracy(net, X = None, y=None):
+def test_accuracy(net, X = None, y = None):
     y = [y for _, y in dataset_test]
     y_hat = net.predict(dataset_test)
     return metrics.accuracy_score(y, y_hat)
@@ -112,7 +112,7 @@ dens_net_121 = NeuralNetBinaryClassifier(
     batch_size = 64,
     iterator_train__shuffle = True, # Shuffle training data on each epoch
     train_split = None,
-    callbacks = [scb.LRScheduler(policy='ExponentialLR', gamma = 0.9), # TODO check if this actually works 
+    callbacks = [scb.LRScheduler(policy = 'ExponentialLR', gamma = 0.9), # TODO check if this actually works 
                  ('train_acc', scb.EpochScoring('accuracy',
                                                 name='train_acc',
                                                 lower_is_better = False,
@@ -123,7 +123,7 @@ dens_net_121 = NeuralNetBinaryClassifier(
                                                on_train = True,
                                                use_caching = False)), # not sure if caching should be disabled here or not ...                                             
                  scb.ProgressBar()], 
-    device ='cuda'
+    device ='cpu'
 )
 
 
@@ -132,6 +132,8 @@ dens_net_121 = NeuralNetBinaryClassifier(
 ######################
 print("Starting with model training: ")
 dens_net_121.fit(X = dataset_train, y = None) # TODO print model parameters
+
+dens_net_121.cal
 
 # print("Model-Params: {}".format(net.get_params()))
 

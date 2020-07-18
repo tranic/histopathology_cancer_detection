@@ -4,12 +4,11 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 import os
 import skimage.io as io
-<<<<<<< HEAD
+
 from skimage import transform
-=======
+
 import matplotlib.pyplot as plt
 import numpy as np
->>>>>>> 67c66e1... Adds DenseNet121
 
 class HistopathDataset(Dataset):
     """ Histopathologic Cancer Dataset that represents a map from keys to data samples."""
@@ -45,6 +44,7 @@ class HistopathDataset(Dataset):
             sample = self.transform(sample)
 
         return sample
+
 
 class ToTensor(object):
     """Convert ndarray from sample to Tensor."""
@@ -157,14 +157,3 @@ if __name__ == '__main__':
                                   RandomRotation((-180, 180)),
                                   RandomHorizontalFlip()]
                                      ))
-
-    # get images manually: plot first two images
-    for i in range(len(transformed_dataset)):
-        sample = transformed_dataset[i]
-        print("index: ", i, " image size: ", sample[0].size(), " label: ", sample[1])
-        # imgplot = plt.imshow(sample[0])
-        # plt.show()
-        if i == 1: break
-
-    # use DataLoader of torch
-    dataloader = DataLoader(transformed_dataset, batch_size=batchsize, shuffle=True, num_workers=num_workers)
