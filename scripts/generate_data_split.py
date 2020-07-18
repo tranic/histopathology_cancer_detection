@@ -55,5 +55,5 @@ def split_data(df, split=(0.8, 0.1, 0.1)):
 
 if __name__ == '__main__':
     all_df = pd.read_csv("../data/train_labels.csv")
-    # split_data(df=all_df, split=(0.8, 0.1, 0.1)) # for train, test, validation
     split_data(df=all_df, split=(0.8, 0.2)) # for train, test only
+    # split_data(df=all_df, split=(0.8, 0.2, 0))

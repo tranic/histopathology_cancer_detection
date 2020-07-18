@@ -4,7 +4,11 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 import os
 import skimage.io as io
+
 from skimage import transform
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 class HistopathDataset(Dataset):
     """ Histopathologic Cancer Dataset that represents a map from keys to data samples."""
@@ -41,16 +45,18 @@ class HistopathDataset(Dataset):
 
         return sample
 
+
 class ToTensor(object):
     """Convert ndarray from sample to Tensor."""
 
     def __call__(self, sample):
         image, label = sample
 
-        # numpy image: H x W x C
+        # numpy image: H x W x Cß
         # torch image: C X H X W
         image = image.transpose((2, 0, 1)) # for colored images
-        return torch.from_numpy(image), label
+        
+        return (torch.from_numpy(image), label.astype(np.float32))
 
 class Normalize(object):
     """ Normalize a tensor(!) image with mean (type=sequence) and standard deviation (type=sequence) for each channel.
@@ -136,29 +142,18 @@ class  RandomHorizontalFlip(object):
         image = transforms.ToTensor()(image)
         return image, label
 
-if __name__ == '__main__':
-    ## Example on how to use the HistopathDataset class
-    num_workers = 0
-    batchsize = 128
+# if __name__ == '__main__':
+#     ## Example on how to use the HistopathDataset class
+#     num_workers = 0
+#     batchsize = 128
 
-    # create custom dataset
-    transformed_dataset = HistopathDataset(
-        label_file=os.path.abspath("data/train_labels.csv"),
-        root_dir=os.path.abspath("data/train"),
-        transform=transforms.Compose([ToTensor(),
-                                  Normalize(mean=[0.70017236, 0.5436771, 0.6961061],
-                                                       std=[0.22246036, 0.26757348, 0.19798167]), # did not verify those values
-                                  RandomRotation((-180, 180)),
-                                  RandomHorizontalFlip()]
-                                     ))
-
-    # get images manually: plot first two images
-    for i in range(len(transformed_dataset)):
-        sample = transformed_dataset[i]
-        print("index: ", i, " image size: ", sample[0].size(), " label: ", sample[1])
-        # imgplot = plt.imshow(sample[0])
-        # plt.show()
-        if i == 1: break
-
-    # use DataLoader of torch
-    dataloader = DataLoader(transformed_dataset, batch_size=batchsize, shuffle=True, num_workers=num_workers)
+#     # create custom dataset
+#     transformed_dataset = HistopathDataset(
+#         label_file=os.path.abspath("data/train_labels.csv"),
+#         root_dir=os.path.abspath("data/train"),
+#         transform=transforms.Compose([ToTensor(),
+#                                   Normalize(mean=[0.70017236, 0.5436771, 0.6961061],
+#                                                        std=[0.22246036, 0.26757348, 0.19798167]), # did not verify those values
+#                                   RandomRotation((-180, 180)),
+#                                   RandomHorizontalFlip()]
+#                                      ))

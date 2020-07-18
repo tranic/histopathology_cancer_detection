@@ -130,3 +130,5 @@ dmypy.json
 
 # Exclude Dataset
 /data
+
+.DS_Store
