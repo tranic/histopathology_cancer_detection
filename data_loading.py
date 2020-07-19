@@ -49,9 +49,7 @@ class HistopathDataset(Dataset):
 class ToTensor(object):
     """Convert ndarray from sample to Tensor."""
 
-    def __call__(self, sample):
-        image = sample
-
+    def __call__(self, image):
         # numpy image: H x W x Cß
         # torch image: C X H X W
         image = image.transpose((2, 0, 1)) # for colored images
@@ -66,8 +64,7 @@ class Normalize(object):
         self.mean = mean
         self.std = std
 
-    def __call__(self, sample):
-        image = sample
+    def __call__(self, image):
         if type(image) != torch.Tensor:
             raise ValueError("Error: Normalize expects torch.Tensor image type.")
         image = image.float()
@@ -88,17 +85,14 @@ class CenterCrop(object):
     def __init__(self, size):
         self.size = size
 
-    def __call__(self, sample):
-        image = sample
+    def __call__(self, image):
         if type(image) != torch.Tensor:
             raise ValueError("Error: CenterCrop expects torch.Tensor image type.")
 
         # Convert Tensor image to PIL before
         image = transforms.ToPILImage()(image)
-
         # Perform CenterCrop
         image = transforms.CenterCrop(size=self.size)(image)
-
         # Convert PIL Image to Tensor after
         image = transforms.ToTensor()(image)
         return image
@@ -109,26 +103,21 @@ class RandomRotation(object):
     def __init__(self, degrees):
         self.degrees = degrees
 
-    def __call__(self, sample):
-        image = sample
-
+    def __call__(self, image):
         if type(image) != torch.Tensor:
             raise ValueError("Error: RandomRotation expects torch.Tensor image type.")
 
         # Convert Tensor image to PIL before
         image = transforms.ToPILImage()(image)
-
         # Perform RandomRotation
         image = transforms.RandomRotation((-180, 180))(image)
-
         # Convert PIL Image to Tensor after
         image = transforms.ToTensor()(image)
         return image
 
 class  RandomHorizontalFlip(object):
 
-    def __call__(self, sample):
-        image = sample
+    def __call__(self, image):
         if type(image) != torch.Tensor:
             raise ValueError("Error: RandomHorizontalFlip expects torch.Tensor image type.")
 
@@ -141,19 +130,3 @@ class  RandomHorizontalFlip(object):
         # Convert PIL Image to Tensor after
         image = transforms.ToTensor()(image)
         return image
-
-# if __name__ == '__main__':
-#     ## Example on how to use the HistopathDataset class
-#     num_workers = 0
-#     batchsize = 128
-
-#     # create custom dataset
-#     transformed_dataset = HistopathDataset(
-#         label_file=os.path.abspath("data/train_labels.csv"),
-#         root_dir=os.path.abspath("data/train"),
-#         transform=transforms.Compose([ToTensor(),
-#                                   Normalize(mean=[0.70017236, 0.5436771, 0.6961061],
-#                                                        std=[0.22246036, 0.26757348, 0.19798167]), # did not verify those values
-#                                   RandomRotation((-180, 180)),
-#                                   RandomHorizontalFlip()]
-#                                      ))
