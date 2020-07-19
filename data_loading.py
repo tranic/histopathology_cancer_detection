@@ -4,25 +4,45 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 import os
 import skimage.io as io
-
-from skimage import transform
-
-import matplotlib.pyplot as plt
 import numpy as np
+
+from scripts.visual_helpers import Visualizer
 
 class HistopathDataset(Dataset):
     """ Histopathologic Cancer Dataset that represents a map from keys to data samples."""
 
-    def __init__(self, label_file, root_dir, transform=None, greyscale=False):
+    def __init__(self, label_file, root_dir, transform=None, greyscale=False, in_memory=False):
         """
         :param label_file: path to csv file containing labels for each and every image id of the data set.
         :param root_dir:  path to directory with all images.
         :param transform: optional transformation operation on each sample.
+        :param greyscale: option to load data as monochrome images.
+        :param in_memory: option to load data fully into memory.
         """
         self.data_frame = pd.read_csv(label_file)
         self.root_dir = root_dir
         self.transform = transform
         self.greyscale = greyscale
+        self.in_memory = in_memory
+
+        if in_memory:
+            self.id2image = self._load_images()
+
+    def _load_images(self):
+        print('loading images in memory...')
+
+        self.img_files = self.data_frame.id.to_list()
+
+        id2image = {}
+        Visualizer.printProgressBar(0, 1, prefix="Progress", suffix="Complete", length=50)
+        for idx, file_name in enumerate(self.img_files):
+            if idx % 220 == 0:
+                Visualizer.printProgressBar(idx + 1, len(self.img_files), prefix="Progress", suffix="Complete", length=50)
+            image = io.imread(fname=os.path.join(self.root_dir, file_name + ".tif"), as_gray=self.greyscale)
+            id2image[file_name] = image
+
+        print("Sucessfully loaded", len(id2image), "pictures into memory.")
+        return id2image
 
     def __len__(self):
         return len(self.data_frame)
@@ -34,9 +54,14 @@ class HistopathDataset(Dataset):
         if torch.is_tensor(index):
             index = index.tolist()
 
-        img_path = os.path.join(self.root_dir, self.data_frame.iloc[index, 0])
-        img_path = img_path + ".tif"
-        image = io.imread(fname=img_path, as_gray=self.greyscale) # np ndarray
+        if self.in_memory:
+            file_name = self.img_files[index]
+            image = self.id2image[file_name]
+        else:
+            img_path = os.path.join(self.root_dir, self.data_frame.iloc[index, 0])
+            img_path = img_path + ".tif"
+            image = io.imread(fname=img_path, as_gray=self.greyscale) # np ndarray
+
         label = self.data_frame.iloc[index, 1]
         label = label.astype(np.float32)
 
@@ -130,3 +155,31 @@ class  RandomHorizontalFlip(object):
         # Convert PIL Image to Tensor after
         image = transforms.ToTensor()(image)
         return image
+
+if __name__ == '__main__':
+    ## Example on how to use the HistopathDataset class
+    num_workers = 0
+    batchsize = 128
+
+    # create custom dataset
+    transformed_dataset = HistopathDataset(
+        label_file=os.path.abspath("data/train_labels_shortie.csv"),
+        root_dir=os.path.abspath("data/train"),
+        transform=transforms.Compose(
+            [ToTensor(),
+             Normalize(mean=[0.70017236, 0.5436771, 0.6961061], std=[0.22246036, 0.26757348, 0.19798167]), # did not verify those values
+             RandomRotation((-180, 180)),
+             RandomHorizontalFlip()]
+        ),
+        in_memory=True)
+
+    # get images manually: plot first two images
+    for i in range(len(transformed_dataset)):
+        sample = transformed_dataset[i]
+        print("index: ", i, " image size: ", sample[0].size(), " label: ", sample[1])
+        # imgplot = plt.imshow(sample[0])
+        # plt.show()
+        if i == 1: break
+
+    # use DataLoader of torch
+    dataloader = DataLoader(transformed_dataset, batch_size=batchsize, shuffle=True, num_workers=num_workers)
