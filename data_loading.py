@@ -8,6 +8,7 @@ import numpy as np
 
 from scripts.visual_helpers import Visualizer
 
+
 class HistopathDataset(Dataset):
     """ Histopathologic Cancer Dataset that represents a map from keys to data samples."""
 
@@ -37,7 +38,8 @@ class HistopathDataset(Dataset):
         Visualizer.printProgressBar(0, 1, prefix="Progress", suffix="Complete", length=50)
         for idx, file_name in enumerate(self.img_files):
             if idx % 220 == 0:
-                Visualizer.printProgressBar(idx + 1, len(self.img_files), prefix="Progress", suffix="Complete", length=50)
+                Visualizer.printProgressBar(idx + 1, len(self.img_files), prefix="Progress", suffix="Complete",
+                                            length=50)
             image = io.imread(fname=os.path.join(self.root_dir, file_name + ".tif"), as_gray=self.greyscale)
             id2image[file_name] = image
 
@@ -60,7 +62,7 @@ class HistopathDataset(Dataset):
         else:
             img_path = os.path.join(self.root_dir, self.data_frame.iloc[index, 0])
             img_path = img_path + ".tif"
-            image = io.imread(fname=img_path, as_gray=self.greyscale) # np ndarray
+            image = io.imread(fname=img_path, as_gray=self.greyscale)  # np ndarray
 
         label = self.data_frame.iloc[index, 1]
         label = label.astype(np.float32)
@@ -77,9 +79,10 @@ class ToTensor(object):
     def __call__(self, image):
         # numpy image: H x W x Cß
         # torch image: C X H X W
-        image = image.transpose((2, 0, 1)) # for colored images
-        
+        image = image.transpose((2, 0, 1))  # for colored images
+
         return torch.from_numpy(image)
+
 
 class Normalize(object):
     """ Normalize a tensor(!) image with mean (type=sequence) and standard deviation (type=sequence) for each channel.
@@ -96,6 +99,7 @@ class Normalize(object):
         image = transforms.Normalize(self.mean, self.std)(image)
         return image
 
+
 class CenterCrop(object):
     """Crops the given Tensor Image at the center.
 
@@ -107,6 +111,7 @@ class CenterCrop(object):
         Returns:
             Tensor Image: Cropped image.
         """
+
     def __init__(self, size):
         self.size = size
 
@@ -121,6 +126,7 @@ class CenterCrop(object):
         # Convert PIL Image to Tensor after
         image = transforms.ToTensor()(image)
         return image
+
 
 class RandomRotation(object):
     """ Rotate the image by angle """
@@ -140,7 +146,8 @@ class RandomRotation(object):
         image = transforms.ToTensor()(image)
         return image
 
-class  RandomHorizontalFlip(object):
+
+class RandomHorizontalFlip(object):
 
     def __call__(self, image):
         if type(image) != torch.Tensor:
