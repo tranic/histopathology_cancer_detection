@@ -9,7 +9,7 @@ https://colab.research.google.com/drive/19t2H-3OFbJGcupUt7txMeErso5RnV-CF?usp=sh
 https://www.overleaf.com/9573728421hjwqmhvqhksk
 
 
-## Assignemnt
+## Assignment
 Build a model that is able to classify whether a patch from a histopathologic scan of lymph node sections contains cancer cells.
 Dataset: https://www.kaggle.com/c/histopathologic-cancer-detection/data
 
