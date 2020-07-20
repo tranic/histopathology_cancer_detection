@@ -82,4 +82,58 @@ class DenseNet121(nn.Module):
         
         return X
  
+class VGG16(nn.Module):
+    def __init__(self):
+        super(VGG16, self).__init__()
+        
+        # Load dene121 net 
+        base_net = models.vgg16(pretrained = False)
+
+
+        # Exctract all dense121 layers for own use
+        self.features = base_net.features
+        
+        # Change input layer of dense121 to match our input sizeß
+        self.features[0] = nn.Conv2d(3, 64, kernel_size = 3, stride = 2, padding = 1, bias = False)
+
+        self.avgpool = base_net.avgpool
+
+        self.classifier2 = nn.Sequential(
+            
+            nn.Linear(in_features=25088, out_features=4096, bias=True),
+            nn.ReLU(inplace = True),
+            nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=4096, out_features=4096, bias=True),
+            nn.ReLU(inplace = True),
+            nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=4096, out_features=1, bias=True)
+            )
+
+       
+        del base_net
+        
+    def forward(self, X):
+        X = X.view(-1, 3, 96, 96).float()
+        
+        X = self.features(X)
+        X = self.avgpool(X)
+        X = torch.flatten(X, 1)
+        X = self.classifier2(X)
+
+        
+        return X
+    
+class ResNet18(nn.Module):
+    def __init__(self):
+        super(ResNet18, self).__init__()
+        
+        self.layer = nn.Sequential(models.resnet18(pretrained=False, num_classes=1000),nn.Linear(1000,512), nn.ReLU(inplace=True), nn.Linear(512,1),nn.Sigmoid())
+
+    def forward(self, X):
+        
+        X = X.view(-1, 3, 96, 96).float()
+        
+        X = self.layer(X)
+      
+        return X
     
