@@ -37,7 +37,7 @@ NeuralNetBinaryClassifier.check_data = custom_check_data
 
 
 
-def train_model(classifier, train_labels, test_lables, file_dir, transform, output_path):
+def train_model(classifier, train_labels, test_lables, file_dir, transform, in_memory, output_path):
     
     ################
     ## Data Loader
@@ -48,12 +48,14 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform, outp
     dataset_train = HistopathDataset(
         label_file = os.path.abspath(train_labels),
         root_dir = os.path.abspath(file_dir),
-        transform = transform)
+        transform = transform,
+        in_memory = in_memory)
     
     dataset_test = HistopathDataset(
         label_file = os.path.abspath(test_lables),
         root_dir = os.path.abspath(file_dir),
-        transform = transform)
+        transform = transform,
+        in_memory = in_memory)
     
     
     
