@@ -1,4 +1,7 @@
-from architecture import LeNet, DenseNet121
+import torchvision
+
+import architecture
+from architecture import LeNet, DenseNet121, ResNet34
 from data_loading import HistopathDataset, ToTensor
 
 import numpy as np
@@ -6,6 +9,7 @@ from sklearn.datasets import make_classification
 from torch import nn
 from skorch import NeuralNet, NeuralNetBinaryClassifier
 import skorch.callbacks as scb
+from torchvision import transforms
 from sklearn.model_selection import RandomizedSearchCV, GridSearchCV
 from sklearn import metrics
 import pickle
@@ -33,6 +37,27 @@ dataset_test = HistopathDataset(
     root_dir = os.path.abspath("data/train"),
     transform = ToTensor())
 
+trans_resnet = transforms.Compose([transforms.ToPILImage(),
+                                  transforms.Pad(64, padding_mode='reflect'), # 96 + 2*64 = 224
+                                  transforms.RandomHorizontalFlip(),  # TODO: model expects normalized channel values (substract means)
+                                  transforms.RandomVerticalFlip(),
+                                  transforms.RandomRotation(20),
+                                  transforms.ToTensor()])
+
+trans_resnet_test = transforms.Compose([transforms.ToPILImage(),
+                                  transforms.Pad(64, padding_mode='reflect'),
+                                  transforms.ToTensor()])
+
+dataset_train_resnet34 = HistopathDataset(
+    label_file = os.path.abspath("data/train_split.csv"),
+    root_dir = os.path.abspath("data/train"),
+    transform = trans_resnet)
+
+dataset_test_resnet34 = HistopathDataset(
+    label_file = os.path.abspath("data/test_split.csv"),
+    root_dir = os.path.abspath("data/train"),
+    transform = trans_resnet_test)
+
 # print(dataset_train.__getitem__(1))
 
 
@@ -50,8 +75,12 @@ dataset_test = HistopathDataset(
 ######################
 
 def test_accuracy(net, X = None, y = None):
-    y = [y for _, y in dataset_test]
-    y_hat = net.predict(dataset_test)
+    if net.module == architecture.ResNet34:
+        dat = dataset_test_resnet34
+    else:
+        dat = dataset_test
+    y = [y for _, y in dat]
+    y_hat = net.predict(dat)
     return metrics.accuracy_score(y, y_hat)
 
 ######################
@@ -119,12 +148,37 @@ dens_net_121 = NeuralNetBinaryClassifier(
     device ='cuda'
 )
 
+res_net_34 = NeuralNetBinaryClassifier(
+    ResNet34,
+    criterion = nn.BCEWithLogitsLoss,
+    optimizer = torch.optim.Adam,
+    optimizer__weight_decay = 0,
+    max_epochs = 6,  # a
+    lr = 0.001,
+    batch_size = 128,
+    iterator_train__shuffle = True,
+    train_split = None,
+    callbacks = [scb.LRScheduler(policy = 'StepLR', gamma = 0.25, step_size=2),
+                 ('train_acc', scb.EpochScoring('accuracy',
+                                                name='train_acc',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                 ('test_acc', scb.EpochScoring(test_accuracy,
+                                               name = 'test_acc',
+                                               lower_is_better = False,
+                                               on_train = True,
+                                               use_caching = False)),
+                 scb.ProgressBar()],
+    device ='cuda'
+)
+
 
 ######################
 # Model Training
 ######################
 print("Starting with model training: ")
-dens_net_121.fit(X = dataset_train, y = None) # TODO print model parameters
+# dens_net_121.fit(X = dataset_train, y = None) # TODO print model parameters
+res_net_34.fit(X = dataset_train_resnet34, y = None)
 
 # print("Model-Params: {}".format(net.get_params()))
 
