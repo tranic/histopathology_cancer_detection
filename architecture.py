@@ -81,5 +81,32 @@ class DenseNet121(nn.Module):
         X = self.classifier3(X)
         
         return X
- 
-    
+
+
+class ResNet34(nn.Module):
+    def __init__(self):
+        super(ResNet34, self).__init__()
+
+        # Load resnet34
+        self.model = models.resnet34(pretrained=True)
+
+        # we only want to train the last 2 multilayers (i.e., layer 3 and 4)
+        for param in list(self.model.parameters()):
+            param.requires_grad = False # as default is True for all
+        for param in list(self.model.layer3.parameters()):
+            param.requires_grad = True
+        for param in list(self.model.layer4.parameters()):
+            param.requires_grad = True
+
+        # change last layer (fc) to adjust for binary classification
+        n_features_in = self.model.fc.in_features
+        self.model.fc = nn.Sequential(
+            nn.Dropout(0.5),
+            nn.Linear(n_features_in, 1)
+        )
+
+    def forward(self, X):
+        X = X.view(-1, 3, 224, 224).float()
+
+        X = self.model(X)
+        return X
