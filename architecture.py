@@ -3,17 +3,16 @@ from torchvision import models
 import torch
 
 class LeNet(nn.Module):
-    def __init__(self, nonlin = nn.Sigmoid()):
+    def __init__(self):
         super(LeNet, self).__init__()
         
-        self.nonlin = nonlin
+        self.ReLu = nn.nn.ReLU(inplace = True)
         self.flatten = nn.Flatten()
-        self.softmax = nn.Softmax(dim = -1)
 
         self.conv2d_0 = nn.Conv2d(3, 6, kernel_size = 5, padding = 2)
-        self.pool_1 =  nn.AvgPool2d(kernel_size = 2, stride = 2)
+        self.pool_1 =  nn.MaxPool2d(kernel_size = 2, stride = 2)
         self.conv2d_2 = nn.Conv2d(6, 16, kernel_size = 5)
-        self.pool_3 =  nn.AvgPool2d(kernel_size = 2, stride = 2)
+        self.pool_3 =  nn.MaxPool2d(kernel_size = 2, stride = 2)
         self.linear_4 = nn.Linear(16 * 22 * 22, 120) # TODO: add more Conv Layers before
         self.linear_5 = nn.Linear(120, 10)
         self.output = nn.Linear(10, 2) # two outputs for softmax in final layer
@@ -23,15 +22,15 @@ class LeNet(nn.Module):
     def forward(self, X, **kwargs):
         X = X.view(-1, 3, 96, 96).float() # previously Reshape()
         
-        X = self.nonlin(self.conv2d_0(X))
+        X = self.ReLu(self.conv2d_0(X))
         X = self.pool_1(X)
-        X = self.nonlin(self.conv2d_2(X))
+        X = self.ReLu(self.conv2d_2(X))
         X = self.pool_3(X)
         X = self.flatten(X)
-        X = self.nonlin(self.linear_4(X))
-        X = self.nonlin(self.linear_5(X))
+        X = self.ReLu(self.linear_4(X))
+        X = self.ReLu(self.linear_5(X))
         
-        X = self.softmax(self.output(X))
+        X = self.output(X)
         
         return X
 
