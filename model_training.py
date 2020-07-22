@@ -36,7 +36,7 @@ NeuralNetBinaryClassifier.check_data = custom_check_data
 def train_model(classifier, train_labels, test_lables, file_dir, transform, in_memory, output_path, logger = None):
 
 
-    if logger:    
+    if logger:  
         params = {}
         
         if hasattr(classifier.callbacks[0], "policy"): params["scheduler_policy"] = classifier.callbacks[0].policy
@@ -51,7 +51,7 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform, in_m
             name=logger["experiment_name"],
             params={**classifier.get_params(), **params}
         )
-        neptune_logger = NeptuneLogger(experiment, close_after_train=False)
+        logger = NeptuneLogger(experiment, close_after_train=False)
 
     
     ################
@@ -112,8 +112,8 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform, in_m
                                                 on_train = True)),
                  scb.ProgressBar()])
 
-    if neptune_logger:
-        classifier.callbacks.append(neptune_logger)
+    if logger:
+        classifier.callbacks.append(logger)
     
     ######################
     # Model Training
@@ -149,12 +149,12 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform, in_m
                            f_optimizer='{}/{}-opt.pkl'.format(output_path, uid), 
                            f_history='{}/{}-history.json'.format(output_path, uid))
 
-    if neptune_logger:
-        neptune_logger.experiment.log_text('uid', str(uid))
-        neptune_logger.experiment.log_artifact('{}/{}-model.pkl'.format(output_path, uid))
-        neptune_logger.experiment.log_artifact('{}/{}-opt.pkl'.format(output_path, uid))
-        neptune_logger.experiment.log_artifact('{}/{}-history.json'.format(output_path, uid))
-        neptune_logger.experiment.stop()
+    if logger:
+        logger.experiment.log_text('uid', str(uid))
+        logger.experiment.log_artifact('{}/{}-model.pkl'.format(output_path, uid))
+        logger.experiment.log_artifact('{}/{}-opt.pkl'.format(output_path, uid))
+        logger.experiment.log_artifact('{}/{}-history.json'.format(output_path, uid))
+        logger.experiment.stop()
 
-        
+
     print("Saving completed...")
