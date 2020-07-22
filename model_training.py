@@ -35,13 +35,19 @@ NeuralNetBinaryClassifier.check_data = custom_check_data
 
 def train_model(classifier, train_labels, test_lables, file_dir, transform, in_memory, output_path, logger):
 
+    params = {}
+
+    if hasattr(classifier.callbacks[0], "policy"): params["scheduler_policy"] = classifier.callbacks[0].policy
+    if hasattr(classifier.callbacks[0], "step_size"): params["scheduler_step_size"] = classifier.callbacks[0].step_size
+    if hasattr(classifier.callbacks[0], "gamma"): params["scheduler_gamma"] = classifier.callbacks[0].gamma
+
     neptune.init(
         api_token=logger["api_token"],
         project_qualified_name=logger["project_qualified_name"]
     )
     experiment = neptune.create_experiment(
         name=logger["experiment_name"],
-        params=classifier.get_params()
+        params={**classifier.get_params(), **params}
     )
     neptune_logger = NeptuneLogger(experiment, close_after_train=False)
 
@@ -75,8 +81,13 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform, in_m
         y_hat = net.predict(dataset_test)
         return metrics.accuracy_score(y, y_hat)
 
+    def roc_score(net, X = None, y = None):
+        y_pred = net.predict_proba(X)
+        auc = roc_auc_score(y, y_pred[:, 1])
+        neptune_logger.experiment.log_metric('roc_auc_score', auc)
+
     
-    # Test if scorings are allready attached
+    # Test if scorings are already attached
     classifier.callbacks.extend([
                  ('train_acc', scb.EpochScoring('accuracy',
                                                 name='train_acc',
@@ -86,7 +97,23 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform, in_m
                                                name = 'test_acc',
                                                lower_is_better = False,
                                                on_train = True,
-                                               use_caching = False)), # not sure if caching should be disabled here or not ...                                        
+                                               use_caching = False)), # not sure if caching should be disabled here or not ...
+                ('f1', scb.EpochScoring('f1',
+                                                name='f1',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                ('roc_auc', scb.EpochScoring('roc_auc',
+                                                name='roc_auc',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                ('precision', scb.EpochScoring('precision',
+                                                name='precision',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                ('recall', scb.EpochScoring('recall',
+                                                name='recall',
+                                                lower_is_better = False,
+                                                on_train = True)),
                  scb.ProgressBar(),
                  neptune_logger])
     
@@ -119,12 +146,15 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform, in_m
     print("Saving model...")
     
     uid = uuid.uuid4()
+    neptune_logger.experiment.log_text('uid', str(uid))
     
     classifier.save_params(f_params = '{}/{}-model.pkl'.format(output_path, uid), 
                            f_optimizer='{}/{}-opt.pkl'.format(output_path, uid), 
                            f_history='{}/{}-history.json'.format(output_path, uid))
 
-    print("Saving completed...")
+    neptune_logger.experiment.log_artifact('{}/{}-model.pkl'.format(output_path, uid))
+    neptune_logger.experiment.log_artifact('{}/{}-opt.pkl'.format(output_path, uid))
+    neptune_logger.experiment.log_artifact('{}/{}-history.json'.format(output_path, uid))
 
-    neptune_logger.experiment.append_tags(['uid', str(uid)])
     neptune_logger.experiment.stop()
+    print("Saving completed...")
