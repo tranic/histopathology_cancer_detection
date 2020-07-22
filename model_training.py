@@ -3,12 +3,10 @@ import uuid
 import skorch.callbacks as scb
 from skorch import NeuralNetBinaryClassifier
 from sklearn import metrics
+import neptune
+from skorch.callbacks.logging import NeptuneLogger
 
 from data_loading import HistopathDataset
-
-
-
-
 from skorch.utils import get_dim
 from skorch.utils import is_dataset
 from torch.utils.data import DataLoader
@@ -35,9 +33,18 @@ def custom_check_data(self, X, y):
 NeuralNetBinaryClassifier.check_data = custom_check_data
 
 
+def train_model(classifier, train_labels, test_lables, file_dir, transform, in_memory, output_path, logger):
 
+    neptune.init(
+        api_token=logger["api_token"],
+        project_qualified_name=logger["project_qualified_name"]
+    )
+    experiment = neptune.create_experiment(
+        name=logger["experiment_name"],
+        params=classifier.get_params()
+    )
+    neptune_logger = NeptuneLogger(experiment, close_after_train=False)
 
-def train_model(classifier, train_labels, test_lables, file_dir, transform, in_memory, output_path):
     
     ################
     ## Data Loader
@@ -67,7 +74,7 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform, in_m
         y = [y for _, y in dataset_test]
         y_hat = net.predict(dataset_test)
         return metrics.accuracy_score(y, y_hat)
-    
+
     
     # Test if scorings are allready attached
     classifier.callbacks.extend([
@@ -79,8 +86,9 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform, in_m
                                                name = 'test_acc',
                                                lower_is_better = False,
                                                on_train = True,
-                                               use_caching = False)), # not sure if caching should be disabled here or not ...                                             
-                 scb.ProgressBar()])
+                                               use_caching = False)), # not sure if caching should be disabled here or not ...                                        
+                 scb.ProgressBar(),
+                 neptune_logger])
     
     ######################
     # Model Training
@@ -118,4 +126,5 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform, in_m
 
     print("Saving completed...")
 
-
+    neptune_logger.experiment.append_tags(['uid', str(uid)])
+    neptune_logger.experiment.stop()
