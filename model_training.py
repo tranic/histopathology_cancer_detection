@@ -39,9 +39,10 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform, in_m
     if logger:  
         params = {}
         
-        if hasattr(classifier.callbacks[0], "policy"): params["scheduler_policy"] = classifier.callbacks[0].policy
-        if hasattr(classifier.callbacks[0], "step_size"): params["scheduler_step_size"] = classifier.callbacks[0].step_size
-        if hasattr(classifier.callbacks[0], "gamma"): params["scheduler_gamma"] = classifier.callbacks[0].gamma
+        if classifier and classifier.callbacks and classifier.callbacks[0]:
+            if hasattr(classifier.callbacks[0], "policy"): params["scheduler_policy"] = classifier.callbacks[0].policy
+            if hasattr(classifier.callbacks[0], "step_size"): params["scheduler_step_size"] = classifier.callbacks[0].step_size
+            if hasattr(classifier.callbacks[0], "gamma"): params["scheduler_gamma"] = classifier.callbacks[0].gamma
 
         neptune.init(
             api_token=logger["api_token"],
