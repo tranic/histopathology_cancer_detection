@@ -15,7 +15,7 @@ class LeNet(nn.Module):
         self.pool_3 =  nn.MaxPool2d(kernel_size = 2, stride = 2)
         self.linear_4 = nn.Linear(16 * 22 * 22, 120) # TODO: add more Conv Layers before
         self.linear_5 = nn.Linear(120, 10)
-        self.output = nn.Linear(10, 2) # two outputs for softmax in final layer
+        self.output = nn.Linear(10, 1) # two outputs for softmax in final layer
         
         
 
@@ -41,8 +41,6 @@ class DenseNet121(nn.Module):
         
         # Load dene121 net 
         base_net = models.densenet121(pretrained = False)
-        
-        self.sigmoid = nn.Sigmoid()
         
         # Exctract all dense121 layers for own use
         self.features = base_net.features
@@ -72,7 +70,7 @@ class DenseNet121(nn.Module):
         # Convert output of predifined dense121 layers to a format that can used by the classifier "layers"
         X = self.dense121_relu(X)
         X = self.dense121_pool(X)
-        X = X.view(X.size(0), -1)
+        X = torch.flatten(X, 1) 
         
         X = self.classifier0(X)
         X = self.classifier1(X)
@@ -141,6 +139,7 @@ class VGG16(nn.Module):
         del base_net
         
     def forward(self, X):
+        
         X = X.view(-1, 3, 96, 96).float()
         
         X = self.features(X)
@@ -163,5 +162,83 @@ class ResNet18(nn.Module):
         
         X = self.layer(X)
       
+        return X
+    
+    
+class VGG11(nn.Module):
+    def __init__(self):
+        super(VGG11, self).__init__()
+        
+        base_net = models.vgg11(pretrained = False)
+
+        self.features = base_net.features
+        
+        # self.features[0] = nn.Conv2d(3, 64, kernel_size = 3, stride = 2, padding = 1, bias = False)
+
+        self.avgpool = base_net.avgpool
+
+        self.classifier = nn.Sequential(
+            
+            nn.Linear(in_features=25088, out_features=4096, bias=True),
+            nn.ReLU(inplace = True),
+            nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=4096, out_features=4096, bias=True),
+            nn.ReLU(inplace = True),
+            nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=4096, out_features=1, bias=True)
+            )
+
+       
+        del base_net
+        
+    def forward(self, X):
+        
+        X = X.view(-1, 3, 96, 96).float()
+        
+        X = self.features(X)
+        X = self.avgpool(X)
+        X = torch.flatten(X, 1)
+        X = self.classifier(X)
+
+        
+        return X
+    
+    
+
+class VGG19(nn.Module):
+    def __init__(self):
+        super(VGG19, self).__init__()
+        
+        base_net = models.vgg19(pretrained = False)
+
+        self.features = base_net.features
+        
+        # self.features[0] = nn.Conv2d(3, 64, kernel_size = 3, stride = 2, padding = 1, bias = False)
+
+        self.avgpool = base_net.avgpool
+
+        self.classifier = nn.Sequential(
+            
+            nn.Linear(in_features=25088, out_features=4096, bias=True),
+            nn.ReLU(inplace = True),
+            nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=4096, out_features=4096, bias=True),
+            nn.ReLU(inplace = True),
+            nn.Dropout(p=0.5, inplace=False),
+            nn.Linear(in_features=4096, out_features=1, bias=True)
+            )
+
+       
+        del base_net
+        
+    def forward(self, X):
+        
+        X = X.view(-1, 3, 96, 96).float()
+        
+        X = self.features(X)
+        X = self.avgpool(X)
+        X = torch.flatten(X, 1) 
+        X = self.classifier(X)
+        
         return X
 

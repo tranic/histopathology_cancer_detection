@@ -74,15 +74,32 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform, in_m
         in_memory = in_memory)
     
     
+    target = [y for _, y in dataset_test]
+    
     ######################
     # Definition of Scoring Methods
     ######################
     
     def test_accuracy(net, X = None, y = None):
-        y = [y for _, y in dataset_test]
         y_hat = net.predict(dataset_test)
-        return metrics.accuracy_score(y, y_hat)
+        return metrics.accuracy_score(target, y_hat)
+        
+    def test_precision(net, X = None, y = None):
+        y_hat = net.predict(dataset_test)
+        return metrics.precision_score(target, y_hat)
 
+    def test_recall(net, X = None, y = None):
+        y_hat = net.predict(dataset_test)
+        return metrics.recall_score(target, y_hat)     
+    
+    def test_f1(net, X = None, y = None):
+        y_hat = net.predict(dataset_test)
+        return metrics.f1_score(target, y_hat)     
+    
+    
+    def test_roc_auc(net, X = None, y = None):
+        y_hat = net.predict(dataset_test)
+        return metrics.roc_auc_score(target, y_hat)             
     
     # Test if scorings are already attached
     classifier.callbacks.extend([
@@ -90,27 +107,47 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform, in_m
                                                 name='train_acc',
                                                 lower_is_better = False,
                                                 on_train = True)),
-                 ('test_acc', scb.EpochScoring(test_accuracy, 
+                ('train_f1', scb.EpochScoring('f1',
+                                                name='train_f1',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                ('train_roc_auc', scb.EpochScoring('roc_auc',
+                                                name='train_roc_auc',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                ('train_precision', scb.EpochScoring('precision',
+                                                name='train_precision',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                ('train_recall', scb.EpochScoring('recall',
+                                                name='train_recall',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                ('test_acc', scb.EpochScoring(test_accuracy, 
                                                name = 'test_acc',
                                                lower_is_better = False,
                                                on_train = True,
-                                               use_caching = False)), # not sure if caching should be disabled here or not ...
-                ('f1', scb.EpochScoring('f1',
-                                                name='f1',
+                                               use_caching = False)), 
+                ('test_f1', scb.EpochScoring(test_f1,
+                                                name='test_f1',
                                                 lower_is_better = False,
-                                                on_train = True)),
-                ('roc_auc', scb.EpochScoring('roc_auc',
-                                                name='roc_auc',
+                                                on_train = True,
+                                                use_caching = False)),
+                ('test_roc_auc', scb.EpochScoring(test_roc_auc,
+                                                name='test_roc_auc',
                                                 lower_is_better = False,
-                                                on_train = True)),
-                ('precision', scb.EpochScoring('precision',
-                                                name='precision',
+                                                on_train = True,
+                                                use_caching = False)),
+                ('test_precision', scb.EpochScoring(test_precision,
+                                                name='test_precision',
                                                 lower_is_better = False,
-                                                on_train = True)),
-                ('recall', scb.EpochScoring('recall',
-                                                name='recall',
+                                                on_train = True,
+                                                use_caching = False)),
+                ('test_recall', scb.EpochScoring(test_recall,
+                                                name='test_recall',
                                                 lower_is_better = False,
-                                                on_train = True)),
+                                                on_train = True,
+                                                use_caching = False)),
                  scb.ProgressBar()])
 
     if logger:
@@ -152,6 +189,7 @@ def train_model(classifier, train_labels, test_lables, file_dir, transform, in_m
 
     if logger:
         logger.experiment.log_text('uid', str(uid))
+        logger.experiment.log_text('test_name', train_labels)
         logger.experiment.log_artifact('{}/{}-model.pkl'.format(output_path, uid))
         logger.experiment.log_artifact('{}/{}-opt.pkl'.format(output_path, uid))
         logger.experiment.log_artifact('{}/{}-history.json'.format(output_path, uid))
