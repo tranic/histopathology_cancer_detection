@@ -14,6 +14,7 @@ from torch.utils.data import DataLoader
 from architecture import VGG11, VGG19, DenseNet121, DenseNet201, ResNet18, ResNet152
 import argparse
 from data_loading import ToTensor
+from torchvision import transforms
 
 
 
@@ -67,7 +68,12 @@ logger_data = {
 dataset_train = HistopathDataset(
         label_file = os.path.abspath(args.trainlabels),
         root_dir = os.path.abspath(args.files),
-        transform = ToTensor(),
+        transform = transforms.Compose([transforms.ToPILImage(),
+                                  # transforms.Pad(64, padding_mode='reflect'), # 96 + 2*64 = 224
+                                  transforms.RandomHorizontalFlip(),  # TODO: model expects normalized channel values (substract means)
+                                  transforms.RandomVerticalFlip(),
+                                  transforms.RandomRotation(20),
+                                  transforms.ToTensor()]),
         in_memory = True)
     
 dataset_test = HistopathDataset(
