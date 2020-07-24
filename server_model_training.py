@@ -11,7 +11,7 @@ from data_loading import HistopathDataset
 from skorch.utils import get_dim
 from skorch.utils import is_dataset
 from torch.utils.data import DataLoader
-from architecture import VGG11, VGG19, DenseNet121, DenseNet201
+from architecture import VGG11, VGG19, DenseNet121, DenseNet201, ResNet18, ResNet152
 import argparse
 from data_loading import ToTensor
 
@@ -53,8 +53,8 @@ args = parser.parse_args()
 
 
 logger_data = {
-                "api_token": "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiMGFjM2E2NWEtM2JiOC00YTFlLWFiNWQtYWYyZjcwNjRhNzlkIn0=",
-                "project_qualified_name": "elangenhan/dl-project",
+                "api_token": "",
+                "project_qualified_name": "elangenhan/hcd-experiments",
                 "experiment_name": "{} - Server - Standard params".format(args.model)
             }
     
@@ -163,12 +163,36 @@ def parameterized_vgg11():
             iterator_train__shuffle = True, # Shuffle training data on each epoch
             train_split = None,
             callbacks = callback_list, 
-            device ='cpu')
+            device ='cuda')
     
 def parameterized_vgg19():
         return NeuralNetBinaryClassifier(
             VGG19,
             optimizer = torch.optim.Adamax, 
+            max_epochs = 30,
+            lr = 0.01,
+            batch_size = 128,
+            iterator_train__shuffle = True, # Shuffle training data on each epoch
+            train_split = None,
+            callbacks = callback_list, 
+            device ='cuda')
+    
+def parameterized_resnet18():
+        return NeuralNetBinaryClassifier(
+            ResNet18,
+            optimizer = torch.optim.Adam, 
+            max_epochs = 30,
+            lr = 0.01,
+            batch_size = 128,
+            iterator_train__shuffle = True, # Shuffle training data on each epoch
+            train_split = None,
+            callbacks = callback_list, 
+            device ='cuda')
+    
+def parameterized_resnet152():
+        return NeuralNetBinaryClassifier(
+            ResNet152,
+            optimizer = torch.optim.Adam, 
             max_epochs = 30,
             lr = 0.01,
             batch_size = 128,
