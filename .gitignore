@@ -130,5 +130,6 @@ dmypy.json
 
 # Exclude Dataset
 /data
+/normalized_data
 
 .DS_Store
