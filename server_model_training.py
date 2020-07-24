@@ -16,6 +16,9 @@ import argparse
 from data_loading import ToTensor
 
 
+
+
+
 # this is only temporary monekey patching, we should probably inherit class and just overwrite this single method
 def custom_check_data(self, X, y):
         # super().check_data(X, y)
@@ -48,6 +51,12 @@ parser.add_argument("--model", "-m", help="specify model")
 
 args = parser.parse_args()
 
+
+logger_data = {
+                "api_token": "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiMGFjM2E2NWEtM2JiOC00YTFlLWFiNWQtYWYyZjcwNjRhNzlkIn0=",
+                "project_qualified_name": "elangenhan/dl-project",
+                "experiment_name": "{} - Server - Standard params".format(args.model)
+            }
     
     ################
     ## Data Loader
@@ -154,7 +163,7 @@ def parameterized_vgg11():
             iterator_train__shuffle = True, # Shuffle training data on each epoch
             train_split = None,
             callbacks = callback_list, 
-            device ='cuda')
+            device ='cpu')
     
 def parameterized_vgg19():
         return NeuralNetBinaryClassifier(
@@ -197,9 +206,9 @@ model_switcher = {'vgg11': parameterized_vgg11,
                   'densenet121': parameterized_densenet121,
                   'densenet201': parameterized_densenet201}
 
-
      
-get_model = model_switcher(args.model, lambda: "Model does not exist")
+get_model = model_switcher.get(args.model, lambda: "Model does not exist")
+
     
 classifier = get_model()
 
@@ -210,12 +219,14 @@ if classifier and classifier.callbacks and classifier.callbacks[0]:
     if hasattr(classifier.callbacks[0], "step_size"): params["scheduler_step_size"] = classifier.callbacks[0].step_size
     if hasattr(classifier.callbacks[0], "gamma"): params["scheduler_gamma"] = classifier.callbacks[0].gamma
 
-neptune.init(api_token=logger["eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiMGFjM2E2NWEtM2JiOC00YTFlLWFiNWQtYWYyZjcwNjRhNzlkIn0="],
-             project_qualified_name=logger["elangenhan/dl-project"])
-
-experiment = neptune.create_experiment(name=logger["{} - Server Run - Standard params".format(args.model)],
-                                       params={**classifier.get_params(), **params})
-
+neptune.init(
+            api_token=logger_data["api_token"],
+            project_qualified_name=logger_data["project_qualified_name"]
+        )
+experiment = neptune.create_experiment(
+            name=logger_data["experiment_name"],
+            params={**classifier.get_params(), **params}
+        )
 logger = NeptuneLogger(experiment, close_after_train=False)
 
 classifier.callbacks.append(logger)
