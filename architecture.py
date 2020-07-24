@@ -259,35 +259,44 @@ class VGG11(nn.Module):
 class VGG19(nn.Module):
     def __init__(self):
         super(VGG19, self).__init__()
+        
+        # Load dene121 net 
+        base_net = models.vgg19(pretrained = False)
 
-        base_net = models.vgg19(pretrained=False)
 
+        # Exctract all dense121 layers for own use
         self.features = base_net.features
-
-        # self.features[0] = nn.Conv2d(3, 64, kernel_size = 3, stride = 2, padding = 1, bias = False)
+        
+        # Change input layer of dense121 to match our input sizeß
+        #self.features[0] = nn.Conv2d(3, 64, kernel_size = 3, stride = 2, padding = 1, bias = False)
 
         self.avgpool = base_net.avgpool
 
         self.classifier = nn.Sequential(
-
+            
             nn.Linear(in_features=25088, out_features=4096, bias=True),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace = True),
             nn.Dropout(p=0.5, inplace=False),
             nn.Linear(in_features=4096, out_features=4096, bias=True),
-            nn.ReLU(inplace=True),
+            nn.ReLU(inplace = True),
             nn.Dropout(p=0.5, inplace=False),
             nn.Linear(in_features=4096, out_features=1, bias=True)
-        )
+            )
 
+       
         del base_net
-
+        
     def forward(self, X):
+        
         X = X.view(-1, 3, 96, 96).float()
-
+        
         X = self.features(X)
         X = self.avgpool(X)
         X = torch.flatten(X, 1)
         X = self.classifier(X)
+
+        
+        return X
 
 class DenseNet201(nn.Module):
     def __init__(self):
