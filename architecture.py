@@ -242,3 +242,36 @@ class VGG19(nn.Module):
         
         return X
 
+class DenseNet201(nn.Module):
+    def __init__(self):
+        super(DenseNet201, self).__init__()
+        
+        # Load dene121 net 
+        base_net = models.densenet201(pretrained = False)
+        
+        self.features = base_net.features
+        
+        self.dense201_relu = nn.ReLU(inplace = True)
+        self.dense201_pool = nn.AdaptiveAvgPool2d((1, 1))
+        
+        
+        self.classifier = nn.Sequential(nn.Linear(1920, 512),
+                                        nn.Dropout(p = 0.1),
+                                        nn.ReLU(),
+                                        nn.Linear(512, 1))
+       
+        del base_net
+        
+    def forward(self, X):
+        X = X.view(-1, 3, 96, 96).float()
+        
+        X = self.features(X)
+    
+        # Convert output of predifined dense121 layers to a format that can used by the classifier "layers"
+        X = self.dense201_relu(X)
+        X = self.dense201_pool(X)
+        X = torch.flatten(X, 1) 
+        
+        X = self.classifier(X)
+        
+        return X
