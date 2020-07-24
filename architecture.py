@@ -141,7 +141,7 @@ class ResNet18(nn.Module):
 
 class ResNet18_96(nn.Module):
     def __init__(self, pretrained=False):
-        super(ResNet18, self).__init__()
+        super(ResNet18_96, self).__init__()
 
         self.model = models.resnet18(pretrained=pretrained)
 
@@ -200,7 +200,7 @@ class ResNet152(nn.Module):
 
 class ResNet152_96(nn.Module):
     def __init__(self, pretrained=False):
-        super(ResNet152, self).__init__()
+        super(ResNet152_96, self).__init__()
 
         self.model = models.resnet152(pretrained=pretrained)
         print("pretrained=", pretrained)
