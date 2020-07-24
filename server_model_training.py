@@ -11,9 +11,10 @@ from data_loading import HistopathDataset
 from skorch.utils import get_dim
 from skorch.utils import is_dataset
 from torch.utils.data import DataLoader
-from architecture import VGG11, VGG19, DenseNet121, DenseNet201, ResNet18, ResNet152
+from architecture import VGG11, VGG19, DenseNet121, DenseNet201, ResNet18, ResNet152, ResNet18_96, ResNet152_96
 import argparse
 from data_loading import ToTensor
+from torchvision import transforms
 
 
 
@@ -67,7 +68,12 @@ logger_data = {
 dataset_train = HistopathDataset(
         label_file = os.path.abspath(args.trainlabels),
         root_dir = os.path.abspath(args.files),
-        transform = ToTensor(),
+        transform = transforms.Compose([transforms.ToPILImage(),
+                                  # transforms.Pad(64, padding_mode='reflect'), # 96 + 2*64 = 224
+                                  transforms.RandomHorizontalFlip(),  # TODO: model expects normalized channel values (substract means)
+                                  transforms.RandomVerticalFlip(),
+                                  transforms.RandomRotation(20),
+                                  transforms.ToTensor()]),
         in_memory = True)
     
 dataset_test = HistopathDataset(
@@ -201,6 +207,31 @@ def parameterized_resnet152():
             callbacks = callback_list, 
             device ='cuda')
     
+    
+def parameterized_resnet18_96():
+        return NeuralNetBinaryClassifier(
+            ResNet18_96,
+            optimizer = torch.optim.Adam, 
+            max_epochs = 30,
+            lr = 0.01,
+            batch_size = 128,
+            iterator_train__shuffle = True, # Shuffle training data on each epoch
+            train_split = None,
+            callbacks = callback_list, 
+            device ='cuda')
+    
+def parameterized_resnet152_96():
+        return NeuralNetBinaryClassifier(
+            ResNet152_96,
+            optimizer = torch.optim.Adam, 
+            max_epochs = 30,
+            lr = 0.01,
+            batch_size = 128,
+            iterator_train__shuffle = True, # Shuffle training data on each epoch
+            train_split = None,
+            callbacks = callback_list, 
+            device ='cuda')    
+    
 def parameterized_densenet121():
         return NeuralNetBinaryClassifier(
             DenseNet121,
@@ -228,7 +259,11 @@ def parameterized_densenet201():
 model_switcher = {'vgg11': parameterized_vgg11,
                   'vgg19': parameterized_vgg19,
                   'densenet121': parameterized_densenet121,
-                  'densenet201': parameterized_densenet201}
+                  'densenet201': parameterized_densenet201,
+                  'resnet18': parameterized_resnet18,
+                  'resnet152': parameterized_resnet152,
+                  'resnet18_99': parameterized_resnet18_96,
+                  'resnet152_99': parameterized_resnet152_96}
 
      
 get_model = model_switcher.get(args.model, lambda: "Model does not exist")
