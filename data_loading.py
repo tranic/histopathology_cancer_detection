@@ -6,7 +6,7 @@ import os
 import skimage.io as io
 import numpy as np
 
-from scripts.visual_helpers import Visualizer
+from scriptss.visual_helpers import Visualizer
 
 
 class HistopathDataset(Dataset):
