@@ -268,21 +268,6 @@ class VGG16(nn.Module):
         return X
 
 
-class ResNet18(nn.Module):
-    def __init__(self):
-        super(ResNet18, self).__init__()
-
-        self.layer = nn.Sequential(models.resnet18(pretrained=False, num_classes=1000), nn.Linear(1000, 512),
-                                   nn.ReLU(inplace=True), nn.Linear(512, 1), nn.Sigmoid())
-
-    def forward(self, X):
-        X = X.view(-1, 3, 96, 96).float()
-
-        X = self.layer(X)
-
-        return X
-
-
 class VGG11(nn.Module):
     def __init__(self):
         super(VGG11, self).__init__()
