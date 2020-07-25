@@ -46,18 +46,6 @@ class DenseNet121(nn.Module):
         # Exctract all dense121 layers for own use
         self.features = base_net.features
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-        # Change input layer of dense121 to match our input sizeß
-        # self.features.conv0 = nn.Conv2d(
-        #     3, 64, kernel_size=3, stride=2, padding=1, bias=False)
-        # self.features.norm0 = nn.BatchNorm2d(64)
-        # self.features.relu0 = nn.ReLU(inplace=True)
-
-=======
->>>>>>> e5b644e89dd08eee3c247d4d2031e84e6724d57f
-=======
->>>>>>> e5b644e89dd08eee3c247d4d2031e84e6724d57f
         self.dense121_relu = nn.ReLU(inplace=True)
         self.dense121_pool = nn.AdaptiveAvgPool2d((1, 1))
 
@@ -80,12 +68,10 @@ class DenseNet121(nn.Module):
         X = torch.flatten(X, 1)
 
         X = self.classifier(X)
-<<<<<<< HEAD
-<<<<<<< HEAD
 
         return X
-
-
+    
+    
 class DenseNet201(nn.Module):
     def __init__(self):
         super(DenseNet201, self).__init__()
@@ -115,84 +101,6 @@ class DenseNet201(nn.Module):
         X = self.dense201_pool(X)
         X = torch.flatten(X, 1)
 
-        X = self.classifier(X)
-
-        return X
-=======
-
-        return X
-    
-    
-class DenseNet201(nn.Module):
-    def __init__(self):
-        super(DenseNet201, self).__init__()
-
-        # Load dene121 net
-        base_net = models.densenet201(pretrained=False)
-
-        self.features = base_net.features
-
-        self.dense201_relu = nn.ReLU(inplace=True)
-        self.dense201_pool = nn.AdaptiveAvgPool2d((1, 1))
->>>>>>> e5b644e89dd08eee3c247d4d2031e84e6724d57f
-
-        self.classifier = nn.Sequential(nn.Linear(1920, 512),
-                                        nn.Dropout(p=0.1),
-                                        nn.ReLU(),
-                                        nn.Linear(512, 1))
-
-<<<<<<< HEAD
-
-class ResNet34(nn.Module):
-=======
-
-        return X
-    
-    
-class DenseNet201(nn.Module):
->>>>>>> e5b644e89dd08eee3c247d4d2031e84e6724d57f
-    def __init__(self):
-        super(DenseNet201, self).__init__()
-
-        # Load dene121 net
-        base_net = models.densenet201(pretrained=False)
-
-        self.features = base_net.features
-
-        self.dense201_relu = nn.ReLU(inplace=True)
-        self.dense201_pool = nn.AdaptiveAvgPool2d((1, 1))
-
-        self.classifier = nn.Sequential(nn.Linear(1920, 512),
-                                        nn.Dropout(p=0.1),
-                                        nn.ReLU(),
-                                        nn.Linear(512, 1))
-
-        del base_net
-
-    def forward(self, X):
-        X = X.view(-1, 3, 96, 96).float()
-
-        X = self.features(X)
-
-        # Convert output of predifined dense121 layers to a format that can used by the classifier "layers"
-        X = self.dense201_relu(X)
-        X = self.dense201_pool(X)
-        X = torch.flatten(X, 1)
-
-=======
-        del base_net
-
-    def forward(self, X):
-        X = X.view(-1, 3, 96, 96).float()
-
-        X = self.features(X)
-
-        # Convert output of predifined dense121 layers to a format that can used by the classifier "layers"
-        X = self.dense201_relu(X)
-        X = self.dense201_pool(X)
-        X = torch.flatten(X, 1)
-
->>>>>>> e5b644e89dd08eee3c247d4d2031e84e6724d57f
         X = self.classifier(X)
 
         return X
@@ -378,11 +286,4 @@ class VGG19(nn.Module):
         X = torch.flatten(X, 1)
         X = self.classifier(X)
 
-<<<<<<< HEAD
         return X
-<<<<<<< HEAD
-=======
-        return X
->>>>>>> e5b644e89dd08eee3c247d4d2031e84e6724d57f
-=======
->>>>>>> e5b644e89dd08eee3c247d4d2031e84e6724d57f
