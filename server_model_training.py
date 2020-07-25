@@ -11,7 +11,7 @@ from data_loading import HistopathDataset
 from skorch.utils import get_dim
 from skorch.utils import is_dataset
 from torch.utils.data import DataLoader
-from architecture import VGG11, VGG19, DenseNet121, DenseNet201, ResNet18, ResNet152, ResNet18_96, ResNet152_96
+from architecture import VGG11, VGG19, DenseNet121, DenseNet201, ResNet18_96, ResNet152_96
 import argparse
 from data_loading import ToTensor
 from torchvision import transforms
@@ -54,7 +54,7 @@ args = parser.parse_args()
 
 
 logger_data = {
-                "api_token": "",
+                "api_token": "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiODIzOTFlNTEtYmIwNi00NDZiLTgyMjgtOGQ5MTllMDU2ZDVlIn0=",
                 "project_qualified_name": "elangenhan/hcd-experiments",
                 "experiment_name": "{} - Server - Standard params".format(args.model)
             }
@@ -79,7 +79,7 @@ dataset_train = HistopathDataset(
 dataset_test = HistopathDataset(
         label_file = os.path.abspath(args.testlabels),
         root_dir = os.path.abspath(args.files),
-        transform = ToTensor(),
+        transform = transforms.ToTensor(),
         in_memory = True)
     
     
@@ -262,8 +262,8 @@ model_switcher = {'vgg11': parameterized_vgg11,
                   'densenet201': parameterized_densenet201,
                   'resnet18': parameterized_resnet18,
                   'resnet152': parameterized_resnet152,
-                  'resnet18_99': parameterized_resnet18_96,
-                  'resnet152_99': parameterized_resnet152_96}
+                  'resnet18_96': parameterized_resnet18_96,
+                  'resnet152_96': parameterized_resnet152_96}
 
      
 get_model = model_switcher.get(args.model, lambda: "Model does not exist")
