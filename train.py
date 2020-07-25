@@ -1,7 +1,7 @@
 import torchvision
 
 import architecture
-from architecture import LeNet, DenseNet121, ResNet34
+from architecture import LeNet, DenseNet121, ResNet34Pretrained, DenseNet121Pretrained, DenseNet201Pretrained
 from data_loading import HistopathDataset, ToTensor
 
 import numpy as np
@@ -75,8 +75,9 @@ dataset_test_resnet34 = HistopathDataset(
 ######################
 
 def test_accuracy(net, X = None, y = None):
-    if net.module == architecture.ResNet34:
-        dat = dataset_test_resnet34
+    if (net.module == architecture.ResNet34Pretrained or net.module == architecture.DenseNet121Pretrained
+            or net.module == architecture.DenseNet201Pretrained):
+        dat = dataset_test_resnet34  # use 224x224 transformed dataset
     else:
         dat = dataset_test
     y = [y for _, y in dat]
@@ -148,8 +149,56 @@ dens_net_121 = NeuralNetBinaryClassifier(
     device ='cuda'
 )
 
+dens_net_121_pretrained = NeuralNetBinaryClassifier(
+    DenseNet121Pretrained,
+    criterion = nn.BCEWithLogitsLoss, # default can be changed to whatever we need
+    optimizer = torch.optim.Adam,
+    optimizer__weight_decay = 0,
+    max_epochs = 2,
+    lr = 0.002,
+    batch_size = 64,
+    iterator_train__shuffle = True, # Shuffle training data on each epoch
+    train_split = None,
+    callbacks = [scb.LRScheduler(policy = 'StepLR', gamma = 0.25, step_size=2), # TODO check if this actually works
+                 ('train_acc', scb.EpochScoring('accuracy',
+                                                name='train_acc',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                 ('test_acc', scb.EpochScoring(test_accuracy,
+                                               name = 'test_acc',
+                                               lower_is_better = False,
+                                               on_train = True,
+                                               use_caching = False)), # not sure if caching should be disabled here or not ...
+                 scb.ProgressBar()],
+    device ='cuda'
+)
+
+dens_net_201_pretrained = NeuralNetBinaryClassifier(
+    DenseNet201Pretrained,
+    criterion = nn.BCEWithLogitsLoss, # default can be changed to whatever we need
+    optimizer = torch.optim.Adam,
+    optimizer__weight_decay = 0,
+    max_epochs = 20,
+    lr = 0.01,
+    batch_size = 64,
+    iterator_train__shuffle = True, # Shuffle training data on each epoch
+    train_split = None,
+    callbacks = [scb.LRScheduler(policy = 'ExponentialLR', gamma = 0.9), # TODO check if this actually works
+                 ('train_acc', scb.EpochScoring('accuracy',
+                                                name='train_acc',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                 ('test_acc', scb.EpochScoring(test_accuracy,
+                                               name = 'test_acc',
+                                               lower_is_better = False,
+                                               on_train = True,
+                                               use_caching = False)), # not sure if caching should be disabled here or not ...
+                 scb.ProgressBar()],
+    device ='cuda'
+)
+
 res_net_34 = NeuralNetBinaryClassifier(
-    ResNet34,
+    ResNet34Pretrained,
     criterion = nn.BCEWithLogitsLoss,
     optimizer = torch.optim.Adam,
     optimizer__weight_decay = 0,
@@ -177,8 +226,10 @@ res_net_34 = NeuralNetBinaryClassifier(
 # Model Training
 ######################
 print("Starting with model training: ")
-# dens_net_121.fit(X = dataset_train, y = None) # TODO print model parameters
-res_net_34.fit(X = dataset_train_resnet34, y = None)
+# dens_net_121.fit(X = dataset_train, y = None)
+# res_net_34.fit(X = dataset_train_resnet34, y = None)
+# dens_net_121_pretrained.fit(X = dataset_train_resnet34, y = None)
+dens_net_201_pretrained.fit(X = dataset_train_resnet34, y = None)
 
 # print("Model-Params: {}".format(net.get_params()))
 
