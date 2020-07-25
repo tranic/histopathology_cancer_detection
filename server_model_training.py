@@ -79,7 +79,7 @@ dataset_train = HistopathDataset(
 dataset_test = HistopathDataset(
         label_file = os.path.abspath(args.testlabels),
         root_dir = os.path.abspath(args.files),
-        transform = ToTensor(),
+        transform = transforms.ToTensor(),
         in_memory = True)
     
     
