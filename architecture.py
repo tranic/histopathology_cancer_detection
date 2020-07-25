@@ -63,8 +63,55 @@ class DenseNet121(nn.Module):
         X = self.features(X)
 
         # Convert output of predifined dense121 layers to a format that can used by the classifier "layers"
-        X = self.dense201_relu(X)
-        X = self.dense201_pool(X)
+        X = self.dense121_relu(X)
+        X = self.dense121_pool(X)
+        X = torch.flatten(X, 1)
+
+        X = self.classifier(X)
+
+        return X
+
+class DenseNet121Pretrained(nn.Module):
+    def __init__(self):
+        super(DenseNet121Pretrained, self).__init__()
+
+        # Load dene121 net
+        base_net = models.densenet121(pretrained=True)
+
+        # Exctract all dense121 layers for own use
+        self.features = base_net.features
+
+        self.dense121_relu = nn.ReLU(inplace=True)
+        self.dense121_pool = nn.AdaptiveAvgPool2d((1, 1))
+
+        # we only want to train the last layers
+        for param in list(self.features.parameters()):
+            param.requires_grad = False  # as default is True for all
+        for param in list(self.features.denseblock4.denselayer13.parameters()):
+            param.requires_grad = True
+        for param in list(self.features.denseblock4.denselayer14.parameters()):
+            param.requires_grad = True
+        for param in list(self.features.denseblock4.denselayer15.parameters()):
+            param.requires_grad = True
+        for param in list(self.features.denseblock4.denselayer16.parameters()):
+            param.requires_grad = True
+
+        # maybe rename to something else, only c3 is the actually classifier
+        self.classifier = nn.Sequential(nn.Linear(1024, 512),
+                                        nn.Dropout(p=0.1),
+                                        nn.ReLU(),
+                                        nn.Linear(512, 1))
+
+        del base_net
+
+    def forward(self, X):
+        X = X.view(-1, 3, 224, 224).float()
+
+        X = self.features(X)
+
+        # Convert output of predifined dense121 layers to a format that can used by the classifier "layers"
+        X = self.dense121_relu(X)
+        X = self.dense121_pool(X)
         X = torch.flatten(X, 1)
 
         X = self.classifier(X)
@@ -93,6 +140,51 @@ class DenseNet201(nn.Module):
 
     def forward(self, X):
         X = X.view(-1, 3, 96, 96).float()
+
+        X = self.features(X)
+
+        # Convert output of predifined dense121 layers to a format that can used by the classifier "layers"
+        X = self.dense201_relu(X)
+        X = self.dense201_pool(X)
+        X = torch.flatten(X, 1)
+
+        X = self.classifier(X)
+
+        return X
+
+class DenseNet201Pretrained(nn.Module):
+    def __init__(self):
+        super(DenseNet201Pretrained, self).__init__()
+
+        # Load dene121 net
+        base_net = models.densenet201(pretrained=True)
+
+        self.features = base_net.features
+
+        self.dense201_relu = nn.ReLU(inplace=True)
+        self.dense201_pool = nn.AdaptiveAvgPool2d((1, 1))
+
+        # we only want to train the last layers
+        for param in list(self.features.parameters()):
+            param.requires_grad = False  # as default is True for all
+        for param in list(self.features.denseblock4.denselayer29.parameters()):
+            param.requires_grad = True
+        for param in list(self.features.denseblock4.denselayer30.parameters()):
+            param.requires_grad = True
+        for param in list(self.features.denseblock4.denselayer31.parameters()):
+            param.requires_grad = True
+        for param in list(self.features.denseblock4.denselayer32.parameters()):
+            param.requires_grad = True
+
+        self.classifier = nn.Sequential(nn.Linear(1920, 512),
+                                        nn.Dropout(p=0.1),
+                                        nn.ReLU(),
+                                        nn.Linear(512, 1))
+
+        del base_net
+
+    def forward(self, X):
+        X = X.view(-1, 3, 224, 224).float()
 
         X = self.features(X)
 
@@ -156,9 +248,9 @@ class ResNet152_96(nn.Module):
         return X
 
 
-class ResNet34_pretrained(nn.Module):
+class ResNet34Pretrained(nn.Module):
     def __init__(self):
-        super(ResNet34_pretrained, self).__init__()
+        super(ResNet34Pretrained, self).__init__()
 
         # Load resnet34
         self.model = models.resnet34(pretrained=True)
@@ -184,9 +276,9 @@ class ResNet34_pretrained(nn.Module):
         X = self.model(X)
         return X
 
-class ResNet152_pretrained(nn.Module):
+class ResNet152Pretrained(nn.Module):
     def __init__(self):
-        super(ResNet152_pretrained, self).__init__()
+        super(ResNet152Pretrained, self).__init__()
 
         # Load resnet34
         self.model = models.resnet152(pretrained=True)

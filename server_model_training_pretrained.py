@@ -1,0 +1,291 @@
+import os
+import uuid
+import skorch.callbacks as scb
+from skorch import NeuralNetBinaryClassifier
+from sklearn import metrics
+import neptune
+import torch
+from skorch.callbacks.logging import NeptuneLogger
+
+from data_loading import HistopathDataset
+from skorch.utils import get_dim
+from skorch.utils import is_dataset
+from torch.utils.data import DataLoader
+from architecture import ResNet34Pretrained, ResNet152Pretrained, DenseNet121Pretrained, DenseNet201Pretrained
+import argparse
+from torchvision import transforms
+
+
+
+
+
+# this is only temporary monekey patching, we should probably inherit class and just overwrite this single method
+def custom_check_data(self, X, y):
+        # super().check_data(X, y)
+        if (
+                (y is None) and
+                (not is_dataset(X)) and
+                (self.iterator_train is DataLoader)
+        ): 
+            msg = ("No y-values are given (y=None). You must either supply a "
+                   "Dataset as X or implement your own DataLoader for "
+                   "training (and your validation) and supply it using the "
+                   "``iterator_train`` and ``iterator_valid`` parameters "
+                   "respectively.")
+            raise ValueError(msg)
+        
+        if y is not None and get_dim(y) != 1:
+            raise ValueError("The target data should be 1-dimensional.")
+
+NeuralNetBinaryClassifier.check_data = custom_check_data
+
+
+
+
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument("--trainlabels", "-trnl", help="set training label path")
+parser.add_argument("--testlabels", "-tstl", help="set test label path")
+parser.add_argument("--files", "-f", help="set file  path")
+parser.add_argument("--output", "-o", help="set output path")
+parser.add_argument("--model", "-m", help="specify model")
+
+args = parser.parse_args()
+
+
+logger_data = {
+                "api_token": "",
+                "project_qualified_name": "elangenhan/hcd-experiments",
+                "experiment_name": "{} - Pretrained - Server - Standard params".format(args.model)
+            }
+    
+    ################
+    ## Data Loader
+    ################    
+    
+    ### using new data loader and new data split ###
+    # create train and test data sets
+dataset_train = HistopathDataset(
+        label_file = os.path.abspath(args.trainlabels),
+        root_dir = os.path.abspath(args.files),
+        transform = transforms.Compose([transforms.ToPILImage(),
+                                  transforms.Pad(64, padding_mode='reflect'), # 96 + 2*64 = 224
+                                  transforms.RandomHorizontalFlip(),  # TODO: model expects normalized channel values (substract means)
+                                  transforms.RandomVerticalFlip(),
+                                  transforms.RandomRotation(20),
+                                  transforms.ToTensor(),
+                                  transforms.Normalize(mean=[0.70017236, 0.5436771, 0.6961061], 
+                                                       std=[0.22246036, 0.26757348, 0.19798167])]),
+        in_memory = True)
+    
+dataset_test = HistopathDataset(
+        label_file = os.path.abspath(args.testlabels),
+        root_dir = os.path.abspath(args.files),
+        transform = transforms.Compose([transforms.ToPILImage(),
+                                  transforms.Pad(64, padding_mode='reflect'), # 96 + 2*64 = 224                         
+                                  transforms.ToTensor(),
+                                  transforms.Normalize(mean=[0.70017236, 0.5436771, 0.6961061], 
+                                                       std=[0.22246036, 0.26757348, 0.19798167])]),
+        in_memory = True)
+    
+    
+target = [y for _, y in dataset_test]
+
+
+def test_accuracy(net, X = None, y = None):
+    y_hat = net.predict(dataset_test)
+    return metrics.accuracy_score(target, y_hat)
+        
+def test_precision(net, X = None, y = None):
+    y_hat = net.predict(dataset_test)
+    return metrics.precision_score(target, y_hat)
+
+def test_recall(net, X = None, y = None):
+    y_hat = net.predict(dataset_test)
+    return metrics.recall_score(target, y_hat)     
+    
+def test_f1(net, X = None, y = None):
+    y_hat = net.predict(dataset_test)
+    return metrics.f1_score(target, y_hat)     
+    
+    
+def test_roc_auc(net, X = None, y = None):
+    y_hat = net.predict(dataset_test)
+    return metrics.roc_auc_score(target, y_hat)   
+
+
+
+
+
+callback_list = [scb.LRScheduler(policy = 'StepLR', gamma = 0.4, step_size = 2),
+                 ('train_acc', scb.EpochScoring('accuracy',
+                                                name='train_acc',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                 ('train_f1', scb.EpochScoring('f1',
+                                                name='train_f1',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                 ('train_roc_auc', scb.EpochScoring('roc_auc',
+                                                    name='train_roc_auc',
+                                                    lower_is_better = False,
+                                                    on_train = True)),
+                 ('train_precision', scb.EpochScoring('precision',
+                                                      name='train_precision',
+                                                      lower_is_better = False,
+                                                      on_train = True)),
+                 ('train_recall', scb.EpochScoring('recall',
+                                                   name='train_recall',
+                                                   lower_is_better = False,
+                                                   on_train = True)),
+                 ('test_acc', scb.EpochScoring(test_accuracy, 
+                                               name = 'test_acc',
+                                               lower_is_better = False,
+                                               on_train = True,
+                                               use_caching = False)), 
+                 ('test_f1', scb.EpochScoring(test_f1,
+                                              name='test_f1',
+                                              lower_is_better = False,
+                                              on_train = True,
+                                              use_caching = False)),
+                 ('test_roc_auc', scb.EpochScoring(test_roc_auc,
+                                                   name='test_roc_auc',
+                                                   lower_is_better = False,
+                                                   on_train = True,
+                                                   use_caching = False)),
+                 ('test_precision', scb.EpochScoring(test_precision,
+                                                     name='test_precision',
+                                                     lower_is_better = False,
+                                                     on_train = True,
+                                                     use_caching = False)),
+                 ('test_recall', scb.EpochScoring(test_recall,
+                                                  name='test_recall',
+                                                  lower_is_better = False,
+                                                  on_train = True,
+                                                  use_caching = False)),
+                 scb.ProgressBar()]       
+
+
+def parameterized_resnet34():
+        return NeuralNetBinaryClassifier(
+            ResNet34Pretrained,
+            optimizer = torch.optim.Adam, 
+            max_epochs = 30,
+            lr = 0.01,
+            batch_size = 128,
+            iterator_train__shuffle = True, # Shuffle training data on each epoch
+            train_split = None,
+            callbacks = callback_list, 
+            device ='cuda')
+    
+def parameterized_resnet152():
+        return NeuralNetBinaryClassifier(
+            ResNet152Pretrained,
+            optimizer = torch.optim.Adam, 
+            max_epochs = 30,
+            lr = 0.01,
+            batch_size = 128,
+            iterator_train__shuffle = True, # Shuffle training data on each epoch
+            train_split = None,
+            callbacks = callback_list, 
+            device ='cuda')
+     
+    
+def parameterized_densenet121():
+        return NeuralNetBinaryClassifier(
+            DenseNet121Pretrained,
+            optimizer = torch.optim.Adam, 
+            max_epochs = 30,
+            lr = 0.01,
+            batch_size = 128,
+            iterator_train__shuffle = True, # Shuffle training data on each epoch
+            train_split = None,
+            callbacks = callback_list, 
+            device ='cuda')
+    
+def parameterized_densenet201():
+        return NeuralNetBinaryClassifier(
+            DenseNet201Pretrained,
+            optimizer = torch.optim.Adam, 
+            max_epochs = 30,
+            lr = 0.01,
+            batch_size = 128,
+            iterator_train__shuffle = True, # Shuffle training data on each epoch
+            train_split = None,
+            callbacks = callback_list, 
+            device ='cuda')
+    
+model_switcher = {'densenet121': parameterized_densenet121,
+                  'densenet201': parameterized_densenet201,
+                  'resnet34': parameterized_resnet34,
+                  'resnet152': parameterized_resnet152}
+
+     
+get_model = model_switcher.get(args.model, lambda: "Model does not exist")
+
+    
+classifier = get_model()
+
+params = {}
+        
+if classifier and classifier.callbacks and classifier.callbacks[0]:
+    if hasattr(classifier.callbacks[0], "policy"): params["scheduler_policy"] = classifier.callbacks[0].policy
+    if hasattr(classifier.callbacks[0], "step_size"): params["scheduler_step_size"] = classifier.callbacks[0].step_size
+    if hasattr(classifier.callbacks[0], "gamma"): params["scheduler_gamma"] = classifier.callbacks[0].gamma
+
+neptune.init(
+            api_token=logger_data["api_token"],
+            project_qualified_name=logger_data["project_qualified_name"]
+        )
+experiment = neptune.create_experiment(
+            name=logger_data["experiment_name"],
+            params={**classifier.get_params(), **params}
+        )
+logger = NeptuneLogger(experiment, close_after_train=False)
+
+classifier.callbacks.append(logger)
+
+
+    ######################
+    # Model Training
+    ######################
+print('''Starting Training for {} 
+          \033[1mModel-Params:\033[0m
+              \033[1mCriterion:\033[0m     {}
+              \033[1mOptimizer:\033[0m     {}
+              \033[1mLearning Rate:\033[0m {}
+              \033[1mEpochs:\033[0m        {}
+              \033[1mBatch size:\033[0m    {}
+              '''
+          .format(classifier.module,
+                  classifier.criterion,
+                  classifier.optimizer,
+                  classifier.lr,
+                  classifier.max_epochs,
+                  classifier.batch_size))
+    
+classifier.fit(X = dataset_train, y = None)  
+    
+    ######################
+    # Model Saving
+    ######################
+    
+    # TODO save this id including the model params for easy retrival and loading
+    
+print("Saving model...")
+    
+uid = uuid.uuid4()
+
+classifier.save_params(f_params = '{}/{}-model.pkl'.format(args.output, uid), 
+                           f_optimizer='{}/{}-opt.pkl'.format(args.output, uid), 
+                           f_history='{}/{}-history.json'.format(args.output, uid))
+
+
+logger.experiment.log_text('uid', str(uid))
+logger.experiment.log_text('test_name', args.trainlabels)
+logger.experiment.log_artifact('{}/{}-model.pkl'.format(args.output, uid))
+logger.experiment.log_artifact('{}/{}-opt.pkl'.format(args.output, uid))
+logger.experiment.log_artifact('{}/{}-history.json'.format(args.output, uid))
+logger.experiment.stop()
+
+
+print("Saving completed...")
