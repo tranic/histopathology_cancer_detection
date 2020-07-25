@@ -159,7 +159,7 @@ dens_net_121_pretrained = NeuralNetBinaryClassifier(
     batch_size = 64,
     iterator_train__shuffle = True, # Shuffle training data on each epoch
     train_split = None,
-    callbacks = [scb.LRScheduler(policy = 'StepLR', gamma = 0.25, step_size=2), # TODO check if this actually works
+    callbacks = [scb.LRScheduler(policy = 'StepLR', gamma = 0.25, step_size=2),
                  ('train_acc', scb.EpochScoring('accuracy',
                                                 name='train_acc',
                                                 lower_is_better = False,
@@ -179,11 +179,11 @@ dens_net_201_pretrained = NeuralNetBinaryClassifier(
     optimizer = torch.optim.Adam,
     optimizer__weight_decay = 0,
     max_epochs = 20,
-    lr = 0.01,
+    lr = 0.002,
     batch_size = 64,
     iterator_train__shuffle = True, # Shuffle training data on each epoch
     train_split = None,
-    callbacks = [scb.LRScheduler(policy = 'ExponentialLR', gamma = 0.9), # TODO check if this actually works
+    callbacks = [scb.LRScheduler(policy = 'StepLR', gamma = 0.25, step_size=2),
                  ('train_acc', scb.EpochScoring('accuracy',
                                                 name='train_acc',
                                                 lower_is_better = False,
