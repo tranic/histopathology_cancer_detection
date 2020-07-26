@@ -176,7 +176,7 @@ def parameterized_vgg19():
             VGG19,
             optimizer = torch.optim.Adamax, 
             max_epochs = 30,
-            lr = 0.01,
+            lr = 0.001,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
             train_split = None,
