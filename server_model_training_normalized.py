@@ -8,37 +8,9 @@ from skorch.callbacks.logging import NeptuneLogger
 from skorch.dataset import CVSplit
 
 from data_loading import HistopathDataset
-from skorch.utils import get_dim
-from skorch.utils import is_dataset
-from torch.utils.data import DataLoader
 from architecture import VGG11, VGG19, DenseNet121, DenseNet201, ResNet18_96, ResNet152_96
 import argparse
 from torchvision import transforms
-
-
-
-
-
-# this is only temporary monekey patching, we should probably inherit class and just overwrite this single method
-def custom_check_data(self, X, y):
-        # super().check_data(X, y)
-        if (
-                (y is None) and
-                (not is_dataset(X)) and
-                (self.iterator_train is DataLoader)
-        ): 
-            msg = ("No y-values are given (y=None). You must either supply a "
-                   "Dataset as X or implement your own DataLoader for "
-                   "training (and your validation) and supply it using the "
-                   "``iterator_train`` and ``iterator_valid`` parameters "
-                   "respectively.")
-            raise ValueError(msg)
-        
-        if y is not None and get_dim(y) != 1:
-            raise ValueError("The target data should be 1-dimensional.")
-
-NeuralNetBinaryClassifier.check_data = custom_check_data
-
 
 
 
@@ -234,7 +206,8 @@ print('''Starting Training for {}
                   classifier.max_epochs,
                   classifier.batch_size))
     
-classifier.fit(X = dataset_train, y = None)  
+target = [y for _, y in dataset_train]                      
+classifier.fit(X = dataset_train, y = torch.Tensor(target))
     
     ######################
     # Model Saving
