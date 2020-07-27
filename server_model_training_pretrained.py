@@ -53,7 +53,7 @@ args = parser.parse_args()
 
 
 logger_data = {
-                "api_token": "",
+                "api_token": "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiODIzOTFlNTEtYmIwNi00NDZiLTgyMjgtOGQ5MTllMDU2ZDVlIn0=",
                 "project_qualified_name": "elangenhan/hcd-experiments",
                 "experiment_name": "{} - Pretrained - Server - Standard params".format(args.model)
             }
