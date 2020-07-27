@@ -2,10 +2,10 @@ import os
 import uuid
 import skorch.callbacks as scb
 from skorch import NeuralNetBinaryClassifier
-from sklearn import metrics
 import neptune
 import torch
 from skorch.callbacks.logging import NeptuneLogger
+from skroch.dataset import CVSplit
 
 from data_loading import HistopathDataset
 from skorch.utils import get_dim
@@ -13,14 +13,13 @@ from skorch.utils import is_dataset
 from torch.utils.data import DataLoader
 from architecture import VGG11, VGG19, DenseNet121, DenseNet201, ResNet18_96, ResNet152_96
 import argparse
-from data_loading import ToTensor
 from torchvision import transforms
 
 
 
 
 
-# this is only temporary monekey patching, we should probably inherit class and just overwrite this single method
+# this is only temporary monkey patching, we should probably inherit class and just overwrite this single method
 def custom_check_data(self, X, y):
         # super().check_data(X, y)
         if (
@@ -45,7 +44,6 @@ NeuralNetBinaryClassifier.check_data = custom_check_data
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument("--trainlabels", "-trnl", help="set training label path")
-parser.add_argument("--testlabels", "-tstl", help="set test label path")
 parser.add_argument("--files", "-f", help="set file  path")
 parser.add_argument("--output", "-o", help="set output path")
 parser.add_argument("--model", "-m", help="specify model")
@@ -75,88 +73,41 @@ dataset_train = HistopathDataset(
                                   transforms.RandomRotation(20),
                                   transforms.ToTensor()]),
         in_memory = True)
+    ß
     
-dataset_test = HistopathDataset(
-        label_file = os.path.abspath(args.testlabels),
-        root_dir = os.path.abspath(args.files),
-        transform = transforms.ToTensor(),
-        in_memory = True)
-    
-    
-target = [y for _, y in dataset_test]
-
-
-def test_accuracy(net, X = None, y = None):
-    y_hat = net.predict(dataset_test)
-    return metrics.accuracy_score(target, y_hat)
-        
-def test_precision(net, X = None, y = None):
-    y_hat = net.predict(dataset_test)
-    return metrics.precision_score(target, y_hat)
-
-def test_recall(net, X = None, y = None):
-    y_hat = net.predict(dataset_test)
-    return metrics.recall_score(target, y_hat)     
-    
-def test_f1(net, X = None, y = None):
-    y_hat = net.predict(dataset_test)
-    return metrics.f1_score(target, y_hat)     
-    
-    
-def test_roc_auc(net, X = None, y = None):
-    y_hat = net.predict(dataset_test)
-    return metrics.roc_auc_score(target, y_hat)   
-
-
-
-
-
 callback_list = [scb.LRScheduler(policy = 'ExponentialLR', gamma = 0.9),
-                 ('train_acc', scb.EpochScoring('accuracy',
+              ('train_acc', scb.EpochScoring('accuracy',
                                                 name='train_acc',
                                                 lower_is_better = False,
                                                 on_train = True)),
-                 ('train_f1', scb.EpochScoring('f1',
+                ('train_f1', scb.EpochScoring('f1',
                                                 name='train_f1',
                                                 lower_is_better = False,
                                                 on_train = True)),
-                 ('train_roc_auc', scb.EpochScoring('roc_auc',
-                                                    name='train_roc_auc',
-                                                    lower_is_better = False,
-                                                    on_train = True)),
-                 ('train_precision', scb.EpochScoring('precision',
-                                                      name='train_precision',
-                                                      lower_is_better = False,
-                                                      on_train = True)),
-                 ('train_recall', scb.EpochScoring('recall',
-                                                   name='train_recall',
-                                                   lower_is_better = False,
-                                                   on_train = True)),
-                 ('test_acc', scb.EpochScoring(test_accuracy, 
-                                               name = 'test_acc',
-                                               lower_is_better = False,
-                                               on_train = True,
-                                               use_caching = False)), 
-                 ('test_f1', scb.EpochScoring(test_f1,
-                                              name='test_f1',
-                                              lower_is_better = False,
-                                              on_train = True,
-                                              use_caching = False)),
-                 ('test_roc_auc', scb.EpochScoring(test_roc_auc,
-                                                   name='test_roc_auc',
-                                                   lower_is_better = False,
-                                                   on_train = True,
-                                                   use_caching = False)),
-                 ('test_precision', scb.EpochScoring(test_precision,
-                                                     name='test_precision',
-                                                     lower_is_better = False,
-                                                     on_train = True,
-                                                     use_caching = False)),
-                 ('test_recall', scb.EpochScoring(test_recall,
-                                                  name='test_recall',
-                                                  lower_is_better = False,
-                                                  on_train = True,
-                                                  use_caching = False)),
+                ('train_roc_auc', scb.EpochScoring('roc_auc',
+                                                name='train_roc_auc',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                ('train_precision', scb.EpochScoring('precision',
+                                                name='train_precision',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                ('train_recall', scb.EpochScoring('recall',
+                                                name='train_recall',
+                                                lower_is_better = False,
+                                                on_train = True)),
+                ('valid_f1', scb.EpochScoring('f1',
+                                                name='valid_f1',
+                                                lower_is_better = False)),
+                ('valid_roc_auc', scb.EpochScoring('roc_auc',
+                                                name='valid_roc_auc',
+                                                lower_is_better = False)),
+                ('valid_precision', scb.EpochScoring('precision',
+                                                name='valid_precision',
+                                                lower_is_better = False)),
+                ('valid_recall', scb.EpochScoring('recall',
+                                                name='valid_recall',
+                                                lower_is_better = False)),
                  scb.ProgressBar()]       
 
 def parameterized_vgg11():
@@ -167,7 +118,7 @@ def parameterized_vgg11():
             lr = 0.001,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = None,
+            train_split = CVSplit(cv = 0.8, random_state = 42),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -179,7 +130,7 @@ def parameterized_vgg19():
             lr = 0.001,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = None,
+            train_split = CVSplit(cv = 0.8, random_state = 42),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -191,7 +142,7 @@ def parameterized_resnet18():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = None,
+            train_split = CVSplit(cv = 0.8, random_state = 42),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -203,7 +154,7 @@ def parameterized_resnet152():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = None,
+            train_split = CVSplit(cv = 0.8, random_state = 42),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -216,7 +167,7 @@ def parameterized_resnet18_96():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = None,
+            train_split = CVSplit(cv = 0.8, random_state = 42),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -228,7 +179,7 @@ def parameterized_resnet152_96():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = None,
+            train_split = CVSplit(cv = 0.8, random_state = 42),
             callbacks = callback_list, 
             device ='cuda')    
     
@@ -240,7 +191,7 @@ def parameterized_densenet121():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = None,
+            train_split = CVSplit(cv = 0.8, random_state = 42),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -252,7 +203,7 @@ def parameterized_densenet201():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = None,
+            train_split = CVSplit(cv = 0.8, random_state = 42),
             callbacks = callback_list, 
             device ='cuda')
     
