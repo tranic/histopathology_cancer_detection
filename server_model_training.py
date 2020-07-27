@@ -5,7 +5,7 @@ from skorch import NeuralNetBinaryClassifier
 import neptune
 import torch
 from skorch.callbacks.logging import NeptuneLogger
-from skroch.dataset import CVSplit
+from skorch.dataset import CVSplit
 
 from data_loading import HistopathDataset
 from skorch.utils import get_dim
@@ -47,6 +47,7 @@ parser.add_argument("--trainlabels", "-trnl", help="set training label path")
 parser.add_argument("--files", "-f", help="set file  path")
 parser.add_argument("--output", "-o", help="set output path")
 parser.add_argument("--model", "-m", help="specify model")
+parser.add_argument("--name", "-n", help="specify neptune name")
 
 args = parser.parse_args()
 
@@ -54,7 +55,7 @@ args = parser.parse_args()
 logger_data = {
                 "api_token": "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiODIzOTFlNTEtYmIwNi00NDZiLTgyMjgtOGQ5MTllMDU2ZDVlIn0=",
                 "project_qualified_name": "elangenhan/hcd-experiments",
-                "experiment_name": "{} - Server - Standard params".format(args.model)
+                "experiment_name": "{} - {}".format(args.model, args.name)
             }
     
     ################
