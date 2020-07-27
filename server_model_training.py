@@ -11,6 +11,7 @@ from data_loading import HistopathDataset
 from architecture import VGG11, VGG19, DenseNet121, DenseNet201, ResNet18_96, ResNet152_96
 import argparse
 from torchvision import transforms
+import pandas as pd
 
 
 
@@ -207,7 +208,8 @@ print('''Starting Training for {}
                   classifier.max_epochs,
                   classifier.batch_size))
     
-target = [y for _, y in dataset_train]                     
+df = pd.read_csv("data/train_labels.csv")
+target = df["label"]                     
 classifier.fit(X = dataset_train, y = torch.Tensor(target))
     
     ######################
