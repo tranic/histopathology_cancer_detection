@@ -208,7 +208,7 @@ print('''Starting Training for {}
                   classifier.max_epochs,
                   classifier.batch_size))
     
-df = pd.read_csv(args.trainlabel)
+df = pd.read_csv(args.trainlabels)
 target = df["label"]                     
 classifier.fit(X = dataset_train, y = torch.Tensor(target))
     

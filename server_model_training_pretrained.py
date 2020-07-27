@@ -47,7 +47,7 @@ dataset_train = HistopathDataset(
                                   transforms.ToTensor(),
                                   transforms.Normalize(mean=[0.70017236, 0.5436771, 0.6961061], 
                                                        std=[0.22246036, 0.26757348, 0.19798167])]),
-        in_memory = True)
+        in_memory = False)
         
 
 
@@ -185,7 +185,7 @@ print('''Starting Training for {}
                   classifier.max_epochs,
                   classifier.batch_size))
 
-df = pd.read_csv(args.trainlabel)
+df = pd.read_csv(args.trainlabels)
 target = df["label"]                    
 classifier.fit(X = dataset_train, y = torch.Tensor(target))
     
