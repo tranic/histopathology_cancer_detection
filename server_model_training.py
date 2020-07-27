@@ -73,7 +73,7 @@ dataset_train = HistopathDataset(
                                   transforms.RandomRotation(20),
                                   transforms.ToTensor()]),
         in_memory = True)
-    ß
+    
     
 callback_list = [scb.LRScheduler(policy = 'ExponentialLR', gamma = 0.9),
               ('train_acc', scb.EpochScoring('accuracy',
@@ -134,31 +134,7 @@ def parameterized_vgg19():
             callbacks = callback_list, 
             device ='cuda')
     
-def parameterized_resnet18():
-        return NeuralNetBinaryClassifier(
-            ResNet18,
-            optimizer = torch.optim.Adam, 
-            max_epochs = 30,
-            lr = 0.01,
-            batch_size = 128,
-            iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.8, random_state = 42),
-            callbacks = callback_list, 
-            device ='cuda')
-    
-def parameterized_resnet152():
-        return NeuralNetBinaryClassifier(
-            ResNet152,
-            optimizer = torch.optim.Adam, 
-            max_epochs = 30,
-            lr = 0.01,
-            batch_size = 128,
-            iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.8, random_state = 42),
-            callbacks = callback_list, 
-            device ='cuda')
-    
-    
+        
 def parameterized_resnet18_96():
         return NeuralNetBinaryClassifier(
             ResNet18_96,
