@@ -26,9 +26,9 @@ args = parser.parse_args()
 
 
 logger_data = {
-                "api_token": "",
+                "api_token": "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiODIzOTFlNTEtYmIwNi00NDZiLTgyMjgtOGQ5MTllMDU2ZDVlIn0=",
                 "project_qualified_name": "elangenhan/hcd-experiments",
-                "experiment_name": "{} - Normalized - {}".format(args.model, args.name)
+                "experiment_name": "{} - {}".format(args.model, args.name)
             }
     
     ################
@@ -47,9 +47,10 @@ dataset_train = HistopathDataset(
                                   transforms.RandomRotation(20),
                                   transforms.ToTensor()]),
         in_memory = True)
-
+    
+    
 callback_list = [scb.LRScheduler(policy = 'ExponentialLR', gamma = 0.9),
-                ('train_acc', scb.EpochScoring('accuracy',
+              ('train_acc', scb.EpochScoring('accuracy',
                                                 name='train_acc',
                                                 lower_is_better = False,
                                                 on_train = True)),
@@ -87,7 +88,7 @@ def parameterized_vgg11():
         return NeuralNetBinaryClassifier(
             VGG11,
             optimizer = torch.optim.Adamax, 
-            max_epochs = 30,
+            max_epochs = 100,
             lr = 0.001,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
@@ -99,20 +100,20 @@ def parameterized_vgg19():
         return NeuralNetBinaryClassifier(
             VGG19,
             optimizer = torch.optim.Adamax, 
-            max_epochs = 30,
+            max_epochs = 100,
             lr = 0.001,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
             train_split = CVSplit(cv = 0.2, random_state = 42),
             callbacks = callback_list, 
             device ='cuda')
-        
     
+        
 def parameterized_resnet18_96():
         return NeuralNetBinaryClassifier(
             ResNet18_96,
             optimizer = torch.optim.Adam, 
-            max_epochs = 30,
+            max_epochs = 100,
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
@@ -124,11 +125,11 @@ def parameterized_resnet152_96():
         return NeuralNetBinaryClassifier(
             ResNet152_96,
             optimizer = torch.optim.Adam, 
-            max_epochs = 30,
+            max_epochs = 100,
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-           train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = CVSplit(cv = 0.2, random_state = 42),
             callbacks = callback_list, 
             device ='cuda')    
     
@@ -136,7 +137,7 @@ def parameterized_densenet121():
         return NeuralNetBinaryClassifier(
             DenseNet121,
             optimizer = torch.optim.Adam, 
-            max_epochs = 30,
+            max_epochs = 100,
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
@@ -148,7 +149,7 @@ def parameterized_densenet201():
         return NeuralNetBinaryClassifier(
             DenseNet201,
             optimizer = torch.optim.Adam, 
-            max_epochs = 30,
+            max_epochs = 100,
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
@@ -208,7 +209,7 @@ print('''Starting Training for {}
                   classifier.batch_size))
     
 df = pd.read_csv(args.trainlabel)
-target = df["label"]                      
+target = df["label"]                     
 classifier.fit(X = dataset_train, y = torch.Tensor(target))
     
     ######################

@@ -92,7 +92,7 @@ def parameterized_resnet34():
             ResNet34Pretrained,
             optimizer = torch.optim.Adam, 
             max_epochs = 30,
-            lr = 0.01,
+            lr = 0.001,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
             train_split = CVSplit(cv = 0.2, random_state = 42),
@@ -104,7 +104,7 @@ def parameterized_resnet152():
             ResNet152Pretrained,
             optimizer = torch.optim.Adam, 
             max_epochs = 30,
-            lr = 0.01,
+            lr = 0.001,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
             train_split = CVSplit(cv = 0.2, random_state = 42),
@@ -185,7 +185,7 @@ print('''Starting Training for {}
                   classifier.max_epochs,
                   classifier.batch_size))
 
-df = pd.read_csv("data/train_labels.csv")
+df = pd.read_csv(args.trainlabel)
 target = df["label"]                    
 classifier.fit(X = dataset_train, y = torch.Tensor(target))
     
