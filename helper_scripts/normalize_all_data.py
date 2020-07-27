@@ -37,39 +37,3 @@ if for_server:
 
     print("Normalization Time for test-data: --- %s seconds ---" % (end_time_test - start_time_test))
     print("Normalization Time for train-data: --- %s seconds ---" % (end_time_train - start_time_train))
-
-else: 
-
-    for tar_file in tar_files:
-        my_tar = tarfile.open('normalized_data/' + tar_file  + '.tar')
-        my_tar.extractall('normalized_data') # specify which folder to extract to
-        my_tar.close()
-
-
-    ####################
-    # Convert all files
-    ####################
-
-    for tar_file in tar_files:
-        files = os.listdir("normalized_data/"+ tar_file)
-        path = "normalized_data/" + tar_file + "_normalized"
-        os.mkdir(path)
-        for file in files:
-            file_path = "normalized_data/" +  tar_file + "/"+ file
-            norm_path = 'normaized_data/' + tar_file + '_normalized' + '/' + file
-            normalizeStaining(file_path, saveFile=norm_path, Io=240, alpha=1, beta=0.15)
-
-
-
-
-
-    ####################
-    # Convert all files
-    ####################
-
-
-    #tar = tarfile.open("sample.tar", "w")
-    #names = os.listdir("normalized_data/11")
-    #for name in names:
-    #    tar.add("normalized_data/11/" + name)
-    #tar.close()
