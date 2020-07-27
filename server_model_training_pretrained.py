@@ -122,7 +122,7 @@ def parameterized_resnet34():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.8, random_state = 42),
+            train_split = CVSplit(cv = 0.2, random_state = 42),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -134,7 +134,7 @@ def parameterized_resnet152():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.8, random_state = 42),
+            train_split = CVSplit(cv = 0.2, random_state = 42),
             callbacks = callback_list, 
             device ='cuda')
      
@@ -147,7 +147,7 @@ def parameterized_densenet121():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.8, random_state = 42),
+            train_split = CVSplit(cv = 0.2, random_state = 42),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -159,7 +159,7 @@ def parameterized_densenet201():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.8, random_state = 42),
+            train_split = CVSplit(cv = 0.2, random_state = 42),
             callbacks = callback_list, 
             device ='cuda')
     
