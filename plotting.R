@@ -70,7 +70,7 @@ create.plot <- function(metric){
      facet_grid(full_data ~ normalized) +
      theme_bw() + 
      scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
-     scale_fill_manual(values = c("#6D33A6", "#A4D955", "#F29F05", "#BF0404", "#00B0F0", "#0070C0"))
+     scale_color_manual(values = c("#0070C0", "#BF0404", "#6D33A6", "#A4D955", "#F29F05" ,"#00B0F0"))
   
   ggsave(
     paste(paste("netfam", "full", "pretrained", metric, sep = "-"), "png", sep = "."),
@@ -84,12 +84,12 @@ create.plot <- function(metric){
     dpi = 300,
     limitsize = FALSE)
   
-  plot <- ggplot(data=(net_type_dat %>% filter(pretrained != "pretrained")), aes_string(x="epoch", y=metric, color = "net_type", group = "net_type")) +
+  plot <- ggplot(data=(net_type_dat %>% filter(pretrained != "pretrained")), aes_string(x="epoch", y="avg_valid_acc", color = "net_type", group = "net_type")) +
     geom_line() + 
     facet_grid(full_data ~ normalized) +
     theme_bw() + 
     scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
-    scale_fill_manual(values = c("#6D33A6", "#A4D955", "#F29F05", "#BF0404", "#00B0F0", "#0070C0"))
+    scale_color_manual(values = c("#0070C0", "#BF0404", "#6D33A6", "#A4D955", "#F29F05" ,"#00B0F0"))
   
   ggsave(
     paste(paste("netfam", "full", "not-pretrained", metric, sep = "-"), "png", sep = "."),
@@ -115,7 +115,7 @@ create.single.plot <- function(ntype, metric){
     facet_grid(full_data ~ pretrained) +
     theme_bw() + 
     scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
-    scale_fill_manual(values = c("#6D33A6", "#A4D955", "#F29F05", "#BF0404", "#00B0F0", "#0070C0"))
+    scale_color_manual(values = c("#0070C0", "#BF0404", "#6D33A6", "#A4D955", "#F29F05" ,"#00B0F0"))
   
   ggsave(
     paste(paste("nettype", ntype, metric, "normalized", sep = "-"), "png", sep = "."),
@@ -135,7 +135,7 @@ create.single.plot <- function(ntype, metric){
     facet_grid(normalized ~ pretrained) +
     theme_bw() + 
     scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
-    scale_fill_manual(values = c("#6D33A6", "#A4D955", "#F29F05", "#BF0404", "#00B0F0", "#0070C0"))
+    scale_color_manual(values = c("#0070C0", "#BF0404", "#6D33A6", "#A4D955", "#F29F05" ,"#00B0F0"))
   
   ggsave(
     paste(paste("nettype", ntype, metric, "full_data", sep = "-"), "png", sep = "."),
@@ -155,7 +155,7 @@ create.single.plot <- function(ntype, metric){
     facet_grid(normalized ~ full_data) +
     theme_bw() + 
     scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
-    scale_fill_manual(values = c("#6D33A6", "#A4D955", "#F29F05", "#BF0404", "#00B0F0", "#0070C0"))
+    scale_color_manual(values = c("#0070C0", "#BF0404", "#6D33A6", "#A4D955", "#F29F05" ,"#00B0F0"))
   
   ggsave(
     paste(paste("nettype", ntype, metric, "pretrained", sep = "-"), "png", sep = "."),
@@ -172,6 +172,20 @@ create.single.plot <- function(ntype, metric){
 }
 
 
+benign <- 130908
+malignant <- 89117
+
+ClassDis <- data.frame(class=c("benign (0)", "malignant (1)"), c(benign, malignant))
+colnames(ClassDis) <- c("Class","Count")
+
+ggplot(data=ClassDis, aes(x=Class, y=Count, fill = as.factor(Class), width=0.7)) +
+  geom_col() + 
+  geom_text(aes(label=Count), position=position_dodge(width=0.9),
+            vjust=2, color="white")+
+  theme_bw() + 
+  scale_fill_manual(values = c("#0070C0", "#BF0404", "#6D33A6", "#A4D955", "#F29F05" ,"#00B0F0")) +
+  theme(legend.position = "none")+
+  scale_y_continuous(labels = comma)
 
 # Method to save plot to file
 

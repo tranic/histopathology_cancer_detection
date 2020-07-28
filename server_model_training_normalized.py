@@ -91,7 +91,7 @@ def parameterized_vgg11():
             lr = 0.001,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -103,7 +103,7 @@ def parameterized_vgg19():
             lr = 0.001,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
         
@@ -116,7 +116,7 @@ def parameterized_resnet18_96():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -128,7 +128,7 @@ def parameterized_resnet152_96():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-           train_split = CVSplit(cv = 0.2, random_state = 42),
+           train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')    
     
@@ -140,7 +140,7 @@ def parameterized_densenet121():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -152,7 +152,7 @@ def parameterized_densenet201():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
     

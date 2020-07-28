@@ -12,11 +12,13 @@ from architecture import VGG11, VGG19, DenseNet121, DenseNet201, ResNet18_96, Re
 import argparse
 from torchvision import transforms
 import pandas as pd
+from skorch.helper import predefined_split
 
 
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument("--trainlabels", "-trnl", help="set training label path")
+parser.add_argument("--testlabels", "-tstl", help="set test label path")
 parser.add_argument("--files", "-f", help="set file  path")
 parser.add_argument("--output", "-o", help="set output path")
 parser.add_argument("--model", "-m", help="specify model")
@@ -46,6 +48,12 @@ dataset_train = HistopathDataset(
                                   transforms.RandomVerticalFlip(),
                                   transforms.RandomRotation(20),
                                   transforms.ToTensor()]),
+        in_memory = True)
+
+dataset_test = HistopathDataset(
+        label_file = os.path.abspath(args.testlabels),
+        root_dir = os.path.abspath(args.files),
+        transform = transforms.ToTensor(),
         in_memory = True)
     
     
@@ -92,7 +100,7 @@ def parameterized_vgg11():
             lr = 0.001,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -104,7 +112,7 @@ def parameterized_vgg19():
             lr = 0.001,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -117,7 +125,7 @@ def parameterized_resnet18_96():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -129,7 +137,7 @@ def parameterized_resnet152_96():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')    
     
@@ -141,7 +149,7 @@ def parameterized_densenet121():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -153,7 +161,7 @@ def parameterized_densenet201():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -165,7 +173,7 @@ def parameterized_lenet():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
     

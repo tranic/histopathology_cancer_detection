@@ -5,17 +5,18 @@ from skorch import NeuralNetBinaryClassifier
 import neptune
 import torch
 from skorch.callbacks.logging import NeptuneLogger
-from skorch.dataset import CVSplit
 from data_loading import HistopathDataset
 from architecture import ResNet34Pretrained, ResNet152Pretrained, DenseNet121Pretrained, DenseNet201Pretrained
 import argparse
 from torchvision import transforms
 import pandas as pd
+from skorch.helper import predefined_split
 
 
 
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument("--trainlabels", "-trnl", help="set training label path")
+parser.add_argument("--testlabels", "-tstl", help="set test label path")
 parser.add_argument("--files", "-f", help="set file  path")
 parser.add_argument("--output", "-o", help="set output path")
 parser.add_argument("--model", "-m", help="specify model")
@@ -49,7 +50,11 @@ dataset_train = HistopathDataset(
                                                        std=[0.22246036, 0.26757348, 0.19798167])]),
         in_memory = False)
         
-
+dataset_test = HistopathDataset(
+        label_file = os.path.abspath(args.testlabels),
+        root_dir = os.path.abspath(args.files),
+        transform = transforms.ToTensor(),
+        in_memory = True)
 
 callback_list = [scb.LRScheduler(policy = 'StepLR', gamma = 0.4, step_size = 2),
                 ('train_acc', scb.EpochScoring('accuracy',
@@ -95,7 +100,7 @@ def parameterized_resnet34():
             lr = 0.001,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -107,7 +112,7 @@ def parameterized_resnet152():
             lr = 0.001,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
      
@@ -120,7 +125,7 @@ def parameterized_densenet121():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
     
@@ -132,7 +137,7 @@ def parameterized_densenet201():
             lr = 0.01,
             batch_size = 128,
             iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = CVSplit(cv = 0.2, random_state = 42),
+            train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
     
