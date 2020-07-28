@@ -3,12 +3,14 @@ import uuid
 import skorch.callbacks as scb
 import neptune
 from skorch.callbacks.logging import NeptuneLogger
-
+import pandas as pd
 from data_loading import HistopathDataset
 import torch
+from skorch.helper import predefined_split
+from sklearn import metrics
 
 
-def train_model(classifier, train_labels, file_dir, train_transform, in_memory, output_path, logger = None):
+def train_model(classifier, train_labels, test_labels, file_dir, train_transform, test_transform, in_memory, output_path, logger = None):
 
 
     if logger:  
@@ -42,6 +44,27 @@ def train_model(classifier, train_labels, file_dir, train_transform, in_memory, 
         transform = train_transform,
         in_memory = in_memory)
     
+    dataset_test = HistopathDataset(
+        label_file = os.path.abspath(test_labels),
+        root_dir = os.path.abspath(file_dir),
+        transform = test_transform,
+        in_memory = in_memory)
+
+
+     ######################
+    # Definition of Scoring Methods
+    ######################
+    
+    def test_roc_auc(net, ds, y = None):
+        y_hat = net.predict_proba(df)
+        y_true = [y for _, y in ds]
+        return metrics.roc_auc_score(y_true, y_hat[:, 1])   
+    
+    def test_roc_auc_2(net, X = None, y = None):
+        y_pred = net.predict_proba(dataset_test)
+        y_true = [y for _, y in dataset_test]
+        return metrics.roc_auc_score(y_true, y_pred[:, 1]) 
+
               
     # Test if scorings are already attached
     classifier.callbacks.extend([
@@ -71,6 +94,14 @@ def train_model(classifier, train_labels, file_dir, train_transform, in_memory, 
                 ('valid_roc_auc', scb.EpochScoring('roc_auc',
                                                 name='valid_roc_auc',
                                                 lower_is_better = False)),
+                ('valid_roc_auc_test', scb.EpochScoring(test_roc_auc,
+                                                name='valid_roc_auc_test',
+                                                lower_is_better = False,
+                                                use_caching = False)),
+                ('valid_roc_auc_test2', scb.EpochScoring(test_roc_auc_2,
+                                                name='valid_roc_auc_test2',
+                                                lower_is_better = False,
+                                                use_caching = False)),
                 ('valid_precision', scb.EpochScoring('precision',
                                                 name='valid_precision',
                                                 lower_is_better = False)),
@@ -79,6 +110,10 @@ def train_model(classifier, train_labels, file_dir, train_transform, in_memory, 
                                                 lower_is_better = False)),
                  scb.ProgressBar()])
 
+    
+    classifier.train_split = predefined_split(dataset_test)
+    
+    
     if logger:
         classifier.callbacks.append(logger)
     
@@ -101,7 +136,8 @@ def train_model(classifier, train_labels, file_dir, train_transform, in_memory, 
                   classifier.batch_size))
     
                                      
-    target = [y for _, y in dataset_train]                     
+    df = pd.read_csv(train_labels)
+    target = df["label"]                    
     classifier.fit(X = dataset_train, y = torch.Tensor(target))
     
     ######################

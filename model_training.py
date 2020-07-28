@@ -80,30 +80,13 @@ def train_model(classifier, train_labels, test_lables, file_dir, train_transform
     # Definition of Scoring Methods
     ######################
     
-    def test_accuracy(net, X = None, y = None):
-        y_hat = net.predict(dataset_test)
-        return metrics.accuracy_score(target, y_hat)
-        
-    def test_precision(net, X = None, y = None):
-        y_hat = net.predict(dataset_test)
-        return metrics.precision_score(target, y_hat)
-
-    def test_recall(net, X = None, y = None):
-        y_hat = net.predict(dataset_test)
-        return metrics.recall_score(target, y_hat)     
-    
-    def test_f1(net, X = None, y = None):
-        y_hat = net.predict(dataset_test)
-        return metrics.f1_score(target, y_hat)     
-    
-    
-    def test_roc_auc(net, X = None, y = None):
-        y_hat = net.predict(dataset_test)
+    def test_roc_auc(net, df, target):
+        y_hat = net.predict_proba(df)
         return metrics.roc_auc_score(target, y_hat)             
     
     # Test if scorings are already attached
     classifier.callbacks.extend([
-                 ('train_acc', scb.EpochScoring('accuracy',
+                ('train_acc', scb.EpochScoring('accuracy',
                                                 name='train_acc',
                                                 lower_is_better = False,
                                                 on_train = True)),
@@ -123,33 +106,26 @@ def train_model(classifier, train_labels, test_lables, file_dir, train_transform
                                                 name='train_recall',
                                                 lower_is_better = False,
                                                 on_train = True)),
-                ('test_acc', scb.EpochScoring(test_accuracy, 
-                                               name = 'test_acc',
-                                               lower_is_better = False,
-                                               on_train = True,
-                                               use_caching = False)), 
-                ('test_f1', scb.EpochScoring(test_f1,
-                                                name='test_f1',
+                ('valid_f1', scb.EpochScoring('f1',
+                                                name='valid_f1',
                                                 lower_is_better = False,
-                                                on_train = True,
                                                 use_caching = False)),
-                ('test_roc_auc', scb.EpochScoring(test_roc_auc,
-                                                name='test_roc_auc',
-                                                lower_is_better = False,
-                                                on_train = True,
-                                                use_caching = False)),
-                ('test_precision', scb.EpochScoring(test_precision,
-                                                name='test_precision',
-                                                lower_is_better = False,
-                                                on_train = True,
-                                                use_caching = False)),
-                ('test_recall', scb.EpochScoring(test_recall,
-                                                name='test_recall',
-                                                lower_is_better = False,
-                                                on_train = True,
-                                                use_caching = False)),
-                 scb.ProgressBar()])
+                ('valid_roc_auc', scb.EpochScoring('roc_auc',
+                                                name='valid_roc_auc',
+                                                lower_is_better = False)),
+                ('valid_roc_auc_test', scb.EpochScoring(test_roc_auc,
+                                                name='valid_roc_auc_test',
+                                                lower_is_better = False)),
+                ('valid_precision', scb.EpochScoring('precision',
+                                                name='valid_precision',
+                                                lower_is_better = False)),
+                ('valid_recall', scb.EpochScoring('recall',
+                                                name='valid_recall',
+                                                lower_is_better = False)),
+                 scb.ProgressBar()])    
 
+    
+    
     if logger:
         classifier.callbacks.append(logger)
     
