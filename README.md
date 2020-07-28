@@ -31,4 +31,9 @@ For documentation and comprehensibility, we stored all our runs in a Neptune.ai 
 ![Neptune Experiment Details](exploration/neputune_graphs.jpg?raw=true "Title")
 
 
+## Code we used
+
+For normalization, we used and modified the [python implementation](https://github.com/schaugf/HEnorm_python) of the normalization method [proposed by Macenko et al.](https://ieeexplore.ieee.org/document/5193250) under the following [licence](https://github.com/schaugf/HEnorm_python/blob/master/licence.txt). 
+
+
 
