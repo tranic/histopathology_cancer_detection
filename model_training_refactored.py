@@ -55,15 +55,15 @@ def train_model(classifier, train_labels, test_labels, file_dir, train_transform
     # Definition of Scoring Methods
     ######################
     
-    def test_roc_auc(net, ds, y = None):
-        y_hat = net.predict_proba(df)
-        y_true = [y for _, y in ds]
-        return metrics.roc_auc_score(y_true, y_hat[:, 1])   
+    # def test_roc_auc(net, ds, y = None):
+    #     y_hat = net.predict_proba(ds)
+    #     y_true = [y for _, y in ds]
+    #     return metrics.roc_auc_score(y_true, y_hat[:, 1])   
     
-    def test_roc_auc_2(net, X = None, y = None):
-        y_pred = net.predict_proba(dataset_test)
-        y_true = [y for _, y in dataset_test]
-        return metrics.roc_auc_score(y_true, y_pred[:, 1]) 
+    # def test_roc_auc_2(net, X = None, y = None):
+    #     y_pred = net.predict_proba(dataset_test)
+    #     y_true = [y for _, y in dataset_test]
+    #     return metrics.roc_auc_score(y_true, y_pred[:, 1]) 
 
               
     # Test if scorings are already attached
@@ -94,14 +94,14 @@ def train_model(classifier, train_labels, test_labels, file_dir, train_transform
                 ('valid_roc_auc', scb.EpochScoring('roc_auc',
                                                 name='valid_roc_auc',
                                                 lower_is_better = False)),
-                ('valid_roc_auc_test', scb.EpochScoring(test_roc_auc,
-                                                name='valid_roc_auc_test',
-                                                lower_is_better = False,
-                                                use_caching = False)),
-                ('valid_roc_auc_test2', scb.EpochScoring(test_roc_auc_2,
-                                                name='valid_roc_auc_test2',
-                                                lower_is_better = False,
-                                                use_caching = False)),
+                # ('valid_roc_auc_test', scb.EpochScoring(test_roc_auc,
+                #                                 name='valid_roc_auc_test',
+                #                                 lower_is_better = False,
+                #                                 use_caching = False)),
+                # ('valid_roc_auc_test2', scb.EpochScoring(test_roc_auc_2,
+                #                                 name='valid_roc_auc_test2',
+                #                                 lower_is_better = False,
+                #                                 use_caching = False)),
                 ('valid_precision', scb.EpochScoring('precision',
                                                 name='valid_precision',
                                                 lower_is_better = False)),
