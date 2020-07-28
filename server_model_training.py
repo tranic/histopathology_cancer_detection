@@ -8,7 +8,7 @@ from skorch.callbacks.logging import NeptuneLogger
 from skorch.dataset import CVSplit
 
 from data_loading import HistopathDataset
-from architecture import VGG11, VGG19, DenseNet121, DenseNet201, ResNet18_96, ResNet152_96
+from architecture import VGG11, VGG19, DenseNet121, DenseNet201, ResNet18_96, ResNet152_96, LeNet
 import argparse
 from torchvision import transforms
 import pandas as pd
@@ -157,12 +157,26 @@ def parameterized_densenet201():
             callbacks = callback_list, 
             device ='cuda')
     
+def parameterized_lenet():
+        return NeuralNetBinaryClassifier(
+            LeNet,
+            optimizer = torch.optim.Adam, 
+            max_epochs = 100,
+            lr = 0.01,
+            batch_size = 128,
+            iterator_train__shuffle = True, # Shuffle training data on each epoch
+            train_split = CVSplit(cv = 0.2, random_state = 42),
+            callbacks = callback_list, 
+            device ='cuda')
+    
+    
 model_switcher = {'vgg11': parameterized_vgg11,
                   'vgg19': parameterized_vgg19,
                   'densenet121': parameterized_densenet121,
                   'densenet201': parameterized_densenet201,
                   'resnet18_96': parameterized_resnet18_96,
-                  'resnet152_96': parameterized_resnet152_96}
+                  'resnet152_96': parameterized_resnet152_96,
+                  'lenet': parameterized_lenet}
 
      
 get_model = model_switcher.get(args.model, lambda: "Model does not exist")
