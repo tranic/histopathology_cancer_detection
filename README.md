@@ -33,7 +33,7 @@ For documentation and comprehensibility, we stored all our runs in a Neptune.ai 
 
 ## Code we used
 
-For normalization, we used and modified the [python implementation](https://github.com/schaugf/HEnorm_python) of the normalization method [proposed by Macenko et al.](https://ieeexplore.ieee.org/document/5193250) under the following [licence](https://github.com/schaugf/HEnorm_python/blob/master/licence.txt) (also visible in our repo [here](licence_normalization.txt).
+For normalization, we used and modified the [python implementation](https://github.com/schaugf/HEnorm_python) of the normalization method [proposed by Macenko et al.](https://ieeexplore.ieee.org/document/5193250) under the following [licence](https://github.com/schaugf/HEnorm_python/blob/master/licence.txt) (a copy also visible in our repo [here](licence_normalization.txt)). This python implementation is used in the file [/helper_scripts/normalization.py]([/helper_scripts/normalization.py]).
 
 
 
