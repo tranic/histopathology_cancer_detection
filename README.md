@@ -28,7 +28,7 @@ For documentation and comprehensibility, we stored all our runs in a Neptune.ai 
 
 ![Neptune Experiment Overview](exploration/neptune_overview.jpg?raw=true "Title")
 
-![Neptune Experiment Details](exploration/neptune_graphs.jpg?raw=true "Title")
+![Neptune Experiment Details](exploration/neputune_graphs.jpg?raw=true "Title")
 
 
 
