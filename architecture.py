@@ -7,7 +7,7 @@ class LeNet(nn.Module):
     def __init__(self):
         super(LeNet, self).__init__()
 
-        self.ReLu = nn.nn.ReLU(inplace=True)
+        self.ReLu = nn.ReLU(inplace=True)
         self.flatten = nn.Flatten()
 
         self.conv2d_0 = nn.Conv2d(3, 6, kernel_size=5, padding=2)
