@@ -1,22 +1,26 @@
 import os
 import uuid
+import argparse
+import neptune
+import pandas as pd
+
 import skorch.callbacks as scb
 from skorch import NeuralNetBinaryClassifier
-import neptune
-import torch
+from skorch.helper import predefined_split
 from skorch.callbacks.logging import NeptuneLogger
-from skorch.dataset import CVSplit
+
+import torch
+from torchvision import transforms
 
 from data_loading import HistopathDataset
 from architecture import VGG11, VGG19, DenseNet121, DenseNet201, ResNet18_96, ResNet152_96, LeNet
-import argparse
-from torchvision import transforms
-import pandas as pd
-from skorch.helper import predefined_split
 
 
+######################################
+#        COMMAND LINE PARAMS        #
+#####################################
 
-parser = argparse.ArgumentParser(description='Process some integers.')
+parser = argparse.ArgumentParser(description='Set necessary values to train different types of predefined models')
 parser.add_argument("--trainlabels", "-trnl", help="set training label path")
 parser.add_argument("--testlabels", "-tstl", help="set test label path")
 parser.add_argument("--files", "-f", help="set file  path")
@@ -24,27 +28,28 @@ parser.add_argument("--output", "-o", help="set output path")
 parser.add_argument("--model", "-m", help="specify model")
 parser.add_argument("--name", "-n", help="specify neptune name")
 
+parser.add_argument("--apitoken", "-api", help="specify neptune api token")
+parser.add_argument("--experiment", "-e", help="specify neptune experiment")
+
 args = parser.parse_args()
 
 
 logger_data = {
-                "api_token": "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiODIzOTFlNTEtYmIwNi00NDZiLTgyMjgtOGQ5MTllMDU2ZDVlIn0=",
-                "project_qualified_name": "elangenhan/hcd-experiments",
+                "api_token": "{}".format(args.apitoken),
+                "project_qualified_name": "{}".format(args.expertiment),
                 "experiment_name": "{} - {}".format(args.model, args.name)
             }
     
-    ################
-    ## Data Loader
-    ################    
-    
-    ### using new data loader and new data split ###
-    # create train and test data sets
+######################################
+#            DATA LOADING           #
+#####################################
+# Create train and test dataset with custom Dataset based on paths supplied as command line args
+
 dataset_train = HistopathDataset(
         label_file = os.path.abspath(args.trainlabels),
         root_dir = os.path.abspath(args.files),
         transform = transforms.Compose([transforms.ToPILImage(),
-                                  # transforms.Pad(64, padding_mode='reflect'), # 96 + 2*64 = 224
-                                  transforms.RandomHorizontalFlip(),  # TODO: model expects normalized channel values (substract means)
+                                  transforms.RandomHorizontalFlip(),
                                   transforms.RandomVerticalFlip(),
                                   transforms.RandomRotation(20),
                                   transforms.ToTensor()]),
@@ -57,6 +62,13 @@ dataset_test = HistopathDataset(
         in_memory = True)
     
     
+######################################
+#          METRIC CALLBACKS         #
+#####################################
+# We collect the same metrics for both test and train data for all models 
+# Also the same learning rate sheduler is used between all runs
+
+# For test metrics "valid" is used as name to be conform with the skorch naming scheme
 callback_list = [scb.LRScheduler(policy = 'ExponentialLR', gamma = 0.9),
               ('train_acc', scb.EpochScoring('accuracy',
                                                 name='train_acc',
@@ -92,6 +104,12 @@ callback_list = [scb.LRScheduler(policy = 'ExponentialLR', gamma = 0.9),
                                                 lower_is_better = False)),
                  scb.ProgressBar()]       
 
+######################################
+#        CLASSIFIER DEFINITION      #
+#####################################
+# Each Classifier is initalized with the chosen hyperparameters
+# Options are predefined to ensure same hyperparameters through all runs
+
 def parameterized_vgg11():
         return NeuralNetBinaryClassifier(
             VGG11,
@@ -99,8 +117,8 @@ def parameterized_vgg11():
             max_epochs = 30,
             lr = 0.001,
             batch_size = 128,
-            iterator_train__shuffle = True, # Shuffle training data on each epoch
-            train_split = predefined_split(dataset_test),
+            iterator_train__shuffle = True,
+            train_split = predefined_split(dataset_test), # Supply the skorch framework with our own predefined test dataset
             callbacks = callback_list, 
             device ='cuda')
     
@@ -111,7 +129,7 @@ def parameterized_vgg19():
             max_epochs = 30,
             lr = 0.001,
             batch_size = 128,
-            iterator_train__shuffle = True, # Shuffle training data on each epoch
+            iterator_train__shuffle = True,
             train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
@@ -124,7 +142,7 @@ def parameterized_resnet18_96():
             max_epochs = 30,
             lr = 0.01,
             batch_size = 128,
-            iterator_train__shuffle = True, # Shuffle training data on each epoch
+            iterator_train__shuffle = True, 
             train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')
@@ -136,7 +154,7 @@ def parameterized_resnet152_96():
             max_epochs = 30,
             lr = 0.01,
             batch_size = 128,
-            iterator_train__shuffle = True, # Shuffle training data on each epoch
+            iterator_train__shuffle = True, 
             train_split = predefined_split(dataset_test),
             callbacks = callback_list, 
             device ='cuda')    
@@ -177,7 +195,7 @@ def parameterized_lenet():
             callbacks = callback_list, 
             device ='cuda')
     
-    
+# Select model based on command line input    
 model_switcher = {'vgg11': parameterized_vgg11,
                   'vgg19': parameterized_vgg19,
                   'densenet121': parameterized_densenet121,
@@ -192,29 +210,36 @@ get_model = model_switcher.get(args.model, lambda: "Model does not exist")
     
 classifier = get_model()
 
+# If available collect additional experiment metrics      
+
 params = {}
-        
+ 
 if classifier and classifier.callbacks and classifier.callbacks[0]:
     if hasattr(classifier.callbacks[0], "policy"): params["scheduler_policy"] = classifier.callbacks[0].policy
     if hasattr(classifier.callbacks[0], "step_size"): params["scheduler_step_size"] = classifier.callbacks[0].step_size
     if hasattr(classifier.callbacks[0], "gamma"): params["scheduler_gamma"] = classifier.callbacks[0].gamma
 
-neptune.init(
-            api_token=logger_data["api_token"],
-            project_qualified_name=logger_data["project_qualified_name"]
-        )
-experiment = neptune.create_experiment(
-            name=logger_data["experiment_name"],
-            params={**classifier.get_params(), **params}
-        )
+
+######################################
+#        NEPTUNE SETUP              #
+#####################################
+# Specifies neptune experiment to collect all metrics across all model training runs
+
+neptune.init(api_token = logger_data["api_token"],
+             project_qualified_name = logger_data["project_qualified_name"])
+
+experiment = neptune.create_experiment(name=logger_data["experiment_name"],
+                                       params={**classifier.get_params(), **params})
+
 logger = NeptuneLogger(experiment, close_after_train=False)
 
 classifier.callbacks.append(logger)
 
+######################################
+#           MODEL TRAINING          #
+#####################################
+# Print most important hyperparameters at the beginning of the model training
 
-    ######################
-    # Model Training
-    ######################
 print('''Starting Training for {} 
           \033[1mModel-Params:\033[0m
               \033[1mCriterion:\033[0m     {}
@@ -230,18 +255,22 @@ print('''Starting Training for {}
                   classifier.max_epochs,
                   classifier.batch_size))
     
+# Extract training labels from file instead of dataset for increased speed
 df = pd.read_csv(args.trainlabels)
-target = df["label"]                     
+target = df["label"]       
+
+# Train the classifier with the fitting function supplied by skorch
+# During each epoch the defined callbacks are called to collect metrics              
 classifier.fit(X = dataset_train, y = torch.Tensor(target))
-    
-    ######################
-    # Model Saving
-    ######################
-    
-    # TODO save this id including the model params for easy retrival and loading
-    
+ 
+   
+######################################
+#           MODEL TRAINING          #
+#####################################
+# Saving the model and its history locally and then upload the artifacts to neptune        
+
 print("Saving model...")
-    
+  
 uid = uuid.uuid4()
 
 classifier.save_params(f_params = '{}/{}-model.pkl'.format(args.output, uid), 
@@ -256,15 +285,4 @@ logger.experiment.log_artifact('{}/{}-opt.pkl'.format(args.output, uid))
 logger.experiment.log_artifact('{}/{}-history.json'.format(args.output, uid))
 logger.experiment.stop()
 
-
 print("Saving completed...")
-    
-    
-    
-    
-    
-    
-    
-        
-    
-   
