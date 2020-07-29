@@ -12,10 +12,8 @@ Project for HPI SS2020 for the seminar Deep Learning
 ## Assignment
 Histopathologic cancer detection on hematoxylin and eosin (H\&E)-stained lymph node sections slides following the [Kaggle challenge](https://www.kaggle.com/c/histopathologic-cancer-detection).
 
-## Installation & Running
-Where data needs to be located
-
-How to run
+## Running
+![How to install and let it run can be viewed in this demo.](https://colab.research.google.com/drive/1ADuwEhJckgJQxXOp42X2fpj0DuDvU3XW?usp=sharing)
 
 ## Results
 
