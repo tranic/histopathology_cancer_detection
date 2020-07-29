@@ -94,11 +94,12 @@ save.plot <- function(plot, prefix,  type,  metric, suffix){
 
 # Apply theme to plots for unified design
 apply.theme <- function(plot){
+  color.scheme <- c("#0070C0", "#F29F05", "#A4D955", "#6D33A6", "#BF0404", "#00B0F0")
   plot + 
     theme_bw() + 
     scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
-    scale_color_manual(values = c("#0070C0", "#F29F05", "#A4D955", "#6D33A6", "#BF0404", "#00B0F0")) +
-    scale_fill_manual(values = c("#0070C0", "#F29F05", "#A4D955", "#6D33A6", "#BF0404", "#00B0F0"))
+    scale_color_manual(values = color.scheme) +
+    scale_fill_manual(values = color.scheme)
 }
 
 # Round (metric) values to percentages with 2 decimals
@@ -293,12 +294,16 @@ write_csv(best.metrics, path = "table_best_worst.csv")
 
 labels <- read_csv("data/train_labels.csv", na = c("NA"))
 
-labels <- labels %>%
+class.dist <- labels %>%
   select(label) %>%
-  mutate(label = revalue(as.factor(label), c("0" = "Negative", "1" = "Positive")))
+  mutate(label = revalue(as.factor(label), c("0" = "Negative", "1" = "Positive"))) %>%
+  count(label) %>%
+  mutate(n_perc = round(n/nrow(labels) * 100, 2))
+  
 
-plot <- apply.theme(ggplot(data = labels, aes(x = label, fill = label)) +
-  geom_bar(width = 0.6)) + 
+plot <- apply.theme(ggplot(data = class.dist, aes(x = label, y = n, fill = label)) +
+  geom_bar(width = 0.6, stat = "identity")) + 
+  geom_text(aes(label= paste("n: ", n, " (", n_perc, "0%)", sep = "")), position=position_dodge(width=1), vjust=-0.5) +
   theme(axis.title.x = element_blank(),
                       legend.position = "None")
 
