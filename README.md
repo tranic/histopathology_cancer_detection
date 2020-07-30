@@ -41,7 +41,7 @@ python3 -W ignore train.py -trnl ./data/train_split.csv -tstl ./data/test_split.
 
 ```
 python3 test.py -tstl "path to test split" -f "path to images" -a densenet121 -p uuid-model.pkl -o uuid-opt.pkl  -hist uuid-history.json
-
+```
 
 ## Experiment Documentation
 
