@@ -34,7 +34,7 @@ pip3 install -r requirements.txt
 **Training**
 
 ``` 
-python3 -W ignore train.py -trnl ./data/train_split.csv -tstl ./data/test_split.csv -f ./data/train -o ./data -m $name -n "Refactored"
+python3 -W ignore train.py -trnl "path to train split" -tstl "path to test split" -f "path to data" -o ./data -m densenet121 -n "Neptune Text"
 ```
 
 **Testing**
