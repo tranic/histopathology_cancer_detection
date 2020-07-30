@@ -15,6 +15,14 @@ Histopathologic cancer detection on hematoxylin and eosin (H\&E)-stained lymph n
 ## Running
 [How to install and let it run can be viewed in this demo.](https://colab.research.google.com/drive/1ADuwEhJckgJQxXOp42X2fpj0DuDvU3XW?usp=sharing)
 
+Our training colab notebooks can be viewed here:
+* [VGGNet11](https://colab.research.google.com/drive/1lfhyK8n9yQuLZ3IC5TGXTAszDZ2MdEAq?usp=sharing)
+* [VGGNet19](https://colab.research.google.com/drive/12nWoFbQWahVAjyh1iRCav0hV-EgHjxKB?usp=sharing)
+* [ResNet18](https://colab.research.google.com/drive/1haDoIiA51HftiioXyFWYMi_tIj3wIDSY?usp=sharing)
+* [ResNet152](https://colab.research.google.com/drive/1UrwvLjxo9StS9NUIj1sGOwO9LurMOal1?usp=sharing)
+* [DenseNet121](https://colab.research.google.com/drive/17xaj6wSZunO4TxkJ_E457dwpdwy3X6Qu?usp=sharing)
+* [DenseNet201](https://colab.research.google.com/drive/1iCdhbz7fglXh07hDT9IBzGAZD5o30jLp?usp=sharing)
+
 ## Results
 
 Picture Einfügen
