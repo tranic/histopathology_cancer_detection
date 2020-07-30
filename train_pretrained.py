@@ -57,7 +57,7 @@ dataset_test = HistopathDataset(
     label_file=os.path.abspath(args.testlabels),
     root_dir=os.path.abspath(args.files),
     transform=transforms.ToTensor(),
-    in_memory=True)
+    in_memory=False)
 
 
 ######################################
