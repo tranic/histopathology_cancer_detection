@@ -23,7 +23,16 @@ Our training colab notebooks can be viewed here:
 * [DenseNet121](https://colab.research.google.com/drive/17xaj6wSZunO4TxkJ_E457dwpdwy3X6Qu?usp=sharing)
 * [DenseNet201](https://colab.research.google.com/drive/1iCdhbz7fglXh07hDT9IBzGAZD5o30jLp?usp=sharing)
 
-## Training on Server
+## Setup and Training on Server
+
+**Setup**
+
+``` 
+pip3 install -r requirements.txt
+
+```
+
+**Training**
 
 ``` 
 pip3 install -r requirements.txt
