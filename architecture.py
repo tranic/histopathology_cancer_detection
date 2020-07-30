@@ -107,8 +107,7 @@ class DenseNet121Pretrained(nn.Module):
         X = X.view(-1, 3, 224, 224).float()
 
         X = self.features(X)
-
-        # Convert output of predifined dense121 layers to a format that can used by the classifier "layers"
+        
         X = self.dense121_relu(X)
         X = self.dense121_pool(X)
         X = torch.flatten(X, 1)
@@ -141,7 +140,6 @@ class DenseNet201(nn.Module):
 
         X = self.features(X)
 
-        # Convert output of predifined dense121 layers to a format that can used by the classifier "layers"
         X = self.dense201_relu(X)
         X = self.dense201_pool(X)
         X = torch.flatten(X, 1)
@@ -186,7 +184,6 @@ class DenseNet201Pretrained(nn.Module):
 
         X = self.features(X)
 
-        # Convert output of predifined dense121 layers to a format that can used by the classifier "layers"
         X = self.dense201_relu(X)
         X = self.dense201_pool(X)
         X = torch.flatten(X, 1)
