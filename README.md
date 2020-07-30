@@ -29,16 +29,19 @@ Our training colab notebooks can be viewed here:
 
 ``` 
 pip3 install -r requirements.txt
-
 ```
 
 **Training**
 
 ``` 
-pip3 install -r requirements.txt
 python3 -W ignore train.py -trnl ./data/train_split.csv -tstl ./data/test_split.csv -f ./data/train -o ./data -m $name -n "Refactored"
+```
+
+**Testing**
 
 ```
+python3 test.py -tstl "path to test split" -f "path to images" -a densenet121 -p uuid-model.pkl -o uuid-opt.pkl  -hist uuid-history.json
+
 
 ## Experiment Documentation
 
