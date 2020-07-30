@@ -3,7 +3,7 @@ from torchvision import models
 import torch
 
 """
-This file contains all CNN architectures as classes inheriting from torch.nn.Module
+This file contains all CNN architectures as classes (non-pretrained and pretrained) inheriting from torch.nn.Module.
 """
 
 
