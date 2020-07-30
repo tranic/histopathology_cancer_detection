@@ -30,6 +30,10 @@ class HistopathDataset(Dataset):
             self.id2image = self._load_images()
 
     def _load_images(self):
+        """
+        Load images into main memory.
+        :return: dict as key-value store containing all images
+        """
         print('loading images in memory...')
 
         self.img_files = self.data_frame.id.to_list()
@@ -51,7 +55,7 @@ class HistopathDataset(Dataset):
 
     def __getitem__(self, index):
         """
-         Fetch a data sample for a given key and turn it to greyscale.
+         Fetch a data sample for a given key and apply the specified transformations.
         """
         if torch.is_tensor(index):
             index = index.tolist()
@@ -148,6 +152,9 @@ class RandomRotation(object):
 
 
 class RandomHorizontalFlip(object):
+    """
+    Randomly flips the image horizontally.
+    """
 
     def __call__(self, image):
         if type(image) != torch.Tensor:
