@@ -53,13 +53,13 @@ dataset_train = HistopathDataset(
                                   transforms.RandomVerticalFlip(),
                                   transforms.RandomRotation(20),
                                   transforms.ToTensor()]),
-        in_memory = True)
+        in_memory = False)
 
 dataset_test = HistopathDataset(
         label_file = os.path.abspath(args.testlabels),
         root_dir = os.path.abspath(args.files),
         transform = transforms.ToTensor(),
-        in_memory = True)
+        in_memory = False)
     
     
 ######################################
