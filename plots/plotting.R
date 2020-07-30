@@ -3,11 +3,6 @@ library(tidyverse)
 library(ggplot2)
 
 
-
-
-
-
-
 ######################################
 #         HELPER FUNCTIONS          #
 #####################################
@@ -87,7 +82,7 @@ save.plot <- function(plot, prefix,  type,  metric, suffix){
     paste(paste(prefix, type, metric, suffix, sep = "-"), "png", sep = "."),
     plot = plot,
     device = "png",
-    path = "plots",
+    path = ".",
     scale = 1,
     width = 40,
     height = 15,
@@ -102,9 +97,13 @@ apply.theme <- function(plot){
   color.scheme <- c("#0070C0", "#F29F05", "#A4D955", "#6D33A6", "#BF0404", "#00B0F0")
   plot + 
     theme_bw() + 
-    scale_y_continuous(breaks = scales::pretty_breaks(n = 10), limits = c(0.4, 1)) +
+    scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
     scale_color_manual(values = color.scheme) +
-    scale_fill_manual(values = color.scheme)
+    scale_fill_manual(values = color.scheme) + 
+    theme(axis.title = element_text(size = 18),
+          axis.text = element_text(size = 12),
+          legend.title = element_text(size = 18),
+          legend.text = element_text(size = 12))
 }
 
 # Round (metric) values to percentages with 2 decimals
@@ -337,6 +336,15 @@ save.plot(apply.theme(ggplot(data = paper,
           suffix = "paper")
 
 
+save.plot(apply.theme(ggplot(data = paper %>% filter(full_data == "full data"), 
+                             aes_string(x =  "epoch", y = "avg_valid_roc_auc", color = "net_family", group = "net_family")) +
+                        geom_line()),
+          prefix = "paper", 
+          type = "2", 
+          metric = "avg_valid_roc_auc", 
+          suffix = "paper")
+
+
 ######################################
 #    CLASS DISTRIBUTION PLOT GEN     #
 #####################################
@@ -360,7 +368,7 @@ ggsave(
   "class-distribution.png",
   plot = plot,
   device = "png",
-  path = "plots",
+  path = ".",
   scale = 1,
   width = 14,
   height = 5,
