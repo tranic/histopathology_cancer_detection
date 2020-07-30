@@ -26,6 +26,7 @@ Our training colab notebooks can be viewed here:
 ## Training on Server
 
 ``` 
+pip3 install -r requirements.txt
 python3 -W ignore train.py -trnl ./data/train_split.csv -tstl ./data/test_split.csv -f ./data/train -o ./data -m $name -n "Refactored"
 
 ```
