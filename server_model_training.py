@@ -267,7 +267,8 @@ classifier.fit(X = dataset_train, y = torch.Tensor(target))
 ######################################
 #           MODEL TRAINING          #
 #####################################
-git s
+# Saving the model and its history locally and then upload the artifacts to neptune
+
 print("Saving model...")
   
 uid = uuid.uuid4()
