@@ -118,9 +118,9 @@ def train_model(classifier, train_labels, test_labels, file_dir, train_transform
     ######################
     # Model Saving
     ######################
-    
-    # TODO save this id including the model params for easy retrival and loading
-    
+
+    # Saving the model and its history locally and then upload the artifacts to neptune
+
     print("Saving model...")
     
     uid = uuid.uuid4()
