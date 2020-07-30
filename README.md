@@ -1,5 +1,5 @@
 # histopathology_cancer_detection
-Project for HPI SS2020 for the seminar Deep Learning 
+Project for HPI SS2020 for the Deep Learning lecture
 
 ## Authors:
 * Nicolas Alder (Master Data Engineering, Hasso Plattner Institute)
