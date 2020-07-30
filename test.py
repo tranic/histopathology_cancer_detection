@@ -87,7 +87,7 @@ f1 = metrics.f1_score(target, y_hat)
 print("Predicting probabilities...")
 y_hat = net.predict_proba(dataset_test)
 print("Calculating AUROC...")
-roc_auc = metrics.roc_auc_score(target, y_hat)
+roc_auc = metrics.roc_auc_score(target, y_hat[:, 1])
 
 
 
