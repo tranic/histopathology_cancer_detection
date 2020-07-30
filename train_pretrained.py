@@ -1,16 +1,20 @@
 import os
 import uuid
+import argparse
+import neptune
+import pandas as pd
+
 import skorch.callbacks as scb
 from skorch import NeuralNetBinaryClassifier
-import neptune
-import torch
+from skorch.helper import predefined_split
 from skorch.callbacks.logging import NeptuneLogger
+
+import torch
+from torchvision import transforms
+
 from data_loading import HistopathDataset
 from architecture import ResNet34Pretrained, ResNet152Pretrained, DenseNet121Pretrained, DenseNet201Pretrained
-import argparse
-from torchvision import transforms
-import pandas as pd
-from skorch.helper import predefined_split
+
 
 ######################################
 #        COMMAND LINE PARAMS        #
@@ -42,7 +46,6 @@ dataset_train = HistopathDataset(
     transform=transforms.Compose([transforms.ToPILImage(),
                                   transforms.Pad(64, padding_mode='reflect'),  # 96 + 2*64 = 224
                                   transforms.RandomHorizontalFlip(),
-                                  # TODO: model expects normalized channel values (substract means)
                                   transforms.RandomVerticalFlip(),
                                   transforms.RandomRotation(20),
                                   transforms.ToTensor(),
@@ -55,6 +58,11 @@ dataset_test = HistopathDataset(
     root_dir=os.path.abspath(args.files),
     transform=transforms.ToTensor(),
     in_memory=True)
+
+
+######################################
+#          METRIC CALLBACKS         #
+#####################################
 
 callback_list = [scb.LRScheduler(policy='StepLR', gamma=0.4, step_size=2),
                  ('train_acc', scb.EpochScoring('accuracy',
@@ -112,7 +120,7 @@ def parameterized_resnet152():
         max_epochs=30,
         lr=0.001,
         batch_size=128,
-        iterator_train__shuffle=True,  # Shuffle training data on each epoch
+        iterator_train__shuffle=True,  
         train_split=predefined_split(dataset_test),
         callbacks=callback_list,
         device='cuda')
@@ -125,7 +133,7 @@ def parameterized_densenet121():
         max_epochs=30,
         lr=0.01,
         batch_size=128,
-        iterator_train__shuffle=True,  # Shuffle training data on each epoch
+        iterator_train__shuffle=True,
         train_split=predefined_split(dataset_test),
         callbacks=callback_list,
         device='cuda')
@@ -138,14 +146,14 @@ def parameterized_densenet201():
         max_epochs=30,
         lr=0.01,
         batch_size=128,
-        iterator_train__shuffle=True,  # Shuffle training data on each epoch
+        iterator_train__shuffle=True,
         train_split=predefined_split(dataset_test),
         callbacks=callback_list,
         device='cuda')
 
 
 ######################################
-#      LOAD TEST ARCHITECTURE       #
+#        CLASSIFIER DEFINITION      #
 #####################################
 
 model_switcher = {'densenet121': parameterized_densenet121,
@@ -157,6 +165,11 @@ get_model = model_switcher.get(args.model, lambda: "Model does not exist")
 
 classifier = get_model()
 
+
+######################################
+#        NEPTUNE SETUP              #
+#####################################
+
 params = {}
 
 if classifier and classifier.callbacks and classifier.callbacks[0]:
@@ -164,21 +177,19 @@ if classifier and classifier.callbacks and classifier.callbacks[0]:
     if hasattr(classifier.callbacks[0], "step_size"): params["scheduler_step_size"] = classifier.callbacks[0].step_size
     if hasattr(classifier.callbacks[0], "gamma"): params["scheduler_gamma"] = classifier.callbacks[0].gamma
 
-neptune.init(
-    api_token=logger_data["api_token"],
-    project_qualified_name=logger_data["project_qualified_name"]
-)
-experiment = neptune.create_experiment(
-    name=logger_data["experiment_name"],
-    params={**classifier.get_params(), **params}
-)
+neptune.init(api_token=logger_data["api_token"],
+             project_qualified_name=logger_data["project_qualified_name"])
+
+experiment = neptune.create_experiment(name=logger_data["experiment_name"],
+                                       params={**classifier.get_params(), **params})
+
 logger = NeptuneLogger(experiment, close_after_train=False)
 
 classifier.callbacks.append(logger)
 
-######################
-# Model Training     #
-######################
+######################################
+#           MODEL TRAINING          #
+#####################################
 
 print('''Starting Training for {} 
           \033[1mModel-Params:\033[0m
@@ -199,9 +210,9 @@ df = pd.read_csv(args.trainlabels)
 target = df["label"]
 classifier.fit(X=dataset_train, y=torch.Tensor(target))
 
-######################
-# Model Saving       #
-######################
+######################################
+#           MODEL SAVING            #
+#####################################
 
 print("Saving model...")
 

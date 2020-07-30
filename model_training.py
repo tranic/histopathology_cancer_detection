@@ -11,6 +11,10 @@ from skorch.helper import predefined_split
 
 def train_model(classifier, train_labels, test_labels, file_dir, train_transform, test_transform, in_memory, output_path, logger = None):
 
+    
+######################################
+#        NEPTUNE SETUP              #
+#####################################    
 
     if logger:  
         params = {}
@@ -20,23 +24,19 @@ def train_model(classifier, train_labels, test_labels, file_dir, train_transform
             if hasattr(classifier.callbacks[0], "step_size"): params["scheduler_step_size"] = classifier.callbacks[0].step_size
             if hasattr(classifier.callbacks[0], "gamma"): params["scheduler_gamma"] = classifier.callbacks[0].gamma
 
-        neptune.init(
-            api_token=logger["api_token"],
-            project_qualified_name=logger["project_qualified_name"]
-        )
-        experiment = neptune.create_experiment(
-            name=logger["experiment_name"],
-            params={**classifier.get_params(), **params}
-        )
+        neptune.init(api_token=logger["api_token"],
+                     project_qualified_name=logger["project_qualified_name"])
+        
+        experiment = neptune.create_experiment(name=logger["experiment_name"],
+                                               params={**classifier.get_params(), **params})
+        
         logger = NeptuneLogger(experiment, close_after_train=False)
 
     
-    ################
-    ## Data Loader
-    ################    
+######################################
+#            DATA LOADING           #
+#####################################  
     
-    ### using new data loader and new data split ###
-    # create train and test data sets
     dataset_train = HistopathDataset(
         label_file = os.path.abspath(train_labels),
         root_dir = os.path.abspath(file_dir),
@@ -50,6 +50,10 @@ def train_model(classifier, train_labels, test_labels, file_dir, train_transform
         in_memory = in_memory)
 
               
+######################################
+#          METRIC CALLBACKS         #
+#####################################    
+    
     classifier.callbacks.extend([
                  ('train_acc', scb.EpochScoring('accuracy',
                                                 name='train_acc',
@@ -92,9 +96,10 @@ def train_model(classifier, train_labels, test_labels, file_dir, train_transform
     if logger:
         classifier.callbacks.append(logger)
     
-    ######################
-    # Model Training
-    ######################
+######################################
+#           MODEL TRAINING          #
+#####################################
+        
     print('''Starting Training for {} 
           \033[1mModel-Params:\033[0m
               \033[1mCriterion:\033[0m     {}
@@ -115,9 +120,9 @@ def train_model(classifier, train_labels, test_labels, file_dir, train_transform
     target = df["label"]                    
     classifier.fit(X = dataset_train, y = torch.Tensor(target))
     
-    ######################
-    # Model Saving
-    ######################
+######################################
+#           MODEL SAVING            #
+#####################################
 
     # Saving the model and its history locally and then upload the artifacts to neptune
 
