@@ -24,7 +24,7 @@ parser.add_argument("--architecture", "-a", help="set model param path")
 
 parser.add_argument("--parameter", "-p", help="set model param path")
 parser.add_argument("--optimizer", "-o", help="set model optimizer path")
-parser.add_argument("--history", "-h", help="set model history path")
+parser.add_argument("--history", "-hist", help="set model history path")
 
 args = parser.parse_args()
 
@@ -37,7 +37,7 @@ dataset_test = HistopathDataset(
         label_file = os.path.abspath(args.testlabels),
         root_dir = os.path.abspath(args.files),
         transform = transforms.ToTensor(),
-        in_memory = True)
+        in_memory = False)
 
 
 df = pd.read_csv(args.testlabels)
@@ -70,16 +70,23 @@ net.load_params(f_params=args.parameter,
 
 
 ######################################
-#            CALCULATE METRICS      #
+#        CALCULATE METRICS          #
 #####################################
 
+print("Predicting lables...")
 y_hat = net.predict(dataset_test)
+print("Calculating accuracy...")
 accuracy = metrics.accuracy_score(target, y_hat)
+print("Calculating precision...")
 precision = metrics.precision_score(target, y_hat)
+print("Calculating recall...")
 recall = metrics.recall_score(target, y_hat)
+print("Calculating F_1...")
 f1 = metrics.f1_score(target, y_hat)
 
+print("Predicting probabilities...")
 y_hat = net.predict_proba(dataset_test)
+print("Calculating AUROC...")
 roc_auc = metrics.roc_auc_score(target, y_hat)
 
 
