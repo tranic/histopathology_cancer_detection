@@ -3,6 +3,11 @@ library(tidyverse)
 library(ggplot2)
 
 
+
+
+
+
+
 ######################################
 #         HELPER FUNCTIONS          #
 #####################################
@@ -97,7 +102,7 @@ apply.theme <- function(plot){
   color.scheme <- c("#0070C0", "#F29F05", "#A4D955", "#6D33A6", "#BF0404", "#00B0F0")
   plot + 
     theme_bw() + 
-    scale_y_continuous(breaks = scales::pretty_breaks(n = 10)) +
+    scale_y_continuous(breaks = scales::pretty_breaks(n = 10), limits = c(0.4, 1)) +
     scale_color_manual(values = color.scheme) +
     scale_fill_manual(values = color.scheme)
 }
@@ -237,6 +242,24 @@ tbl <- dat %>%
 # Write results for file for conversion to latex                     
 write_csv(tbl, path = "table.csv")
 
+# Preprocessing for table with average values of model types
+tbl_2 <- dat %>%
+  mutate(net_type = as.factor(net_type),
+         epoch = as.factor(x),
+         pretrained = as.factor(pretrained),
+         normalized = as.factor(normalized),
+         full_data = as.factor(full_data)) %>%
+  filter(epoch == "30") %>%
+  filter(!(net_family == "VGG" & optimizer == "Adam")) %>%
+  group_by(net_type, pretrained, normalized, full_data) %>%
+  summarise(avg_valid_acc = mean(valid_acc),
+            avg_valid_f1 = mean(valid_f1),
+            avg_valid_precision = mean(valid_precision),
+            avg_valid_recall = mean(valid_recall),
+            avg_valid_roc_auc = mean(valid_roc_auc))
+
+write_csv(tbl_2, path = "table2.csv")
+
 
 # Preprocessing to find models with best result for each metric
 base <- dat %>%
@@ -287,6 +310,32 @@ union(base %>%
 write_csv(best.metrics, path = "table_best_worst.csv")
 
 
+######################################
+#         AUC vs RECALL PLOTS       #
+#####################################
+
+paper <- net_families %>%
+  filter(pretrained == "not pretrained") %>%
+  filter(normalized == "not normalized")
+  
+save.plot(apply.theme(ggplot(data = paper, 
+                             aes_string(x =  "epoch", y = "avg_valid_recall", color = "net_family", group = "net_family")) +
+                        geom_line() + 
+                        facet_grid(full_data ~ .)),
+          prefix = "paper", 
+          type = "1", 
+          metric = "avg_valid_recall", 
+          suffix = "paper")
+
+save.plot(apply.theme(ggplot(data = paper, 
+                             aes_string(x =  "epoch", y = "avg_valid_roc_auc", color = "net_family", group = "net_family")) +
+                        geom_line() + 
+                        facet_grid(full_data ~ .)),
+          prefix = "paper", 
+          type = "1", 
+          metric = "avg_valid_roc_auc", 
+          suffix = "paper")
+
 
 ######################################
 #    CLASS DISTRIBUTION PLOT GEN     #
@@ -296,14 +345,14 @@ labels <- read_csv("data/train_labels.csv", na = c("NA"))
 
 class.dist <- labels %>%
   select(label) %>%
-  mutate(label = revalue(as.factor(label), c("0" = "Negative", "1" = "Positive"))) %>%
+  mutate(label = revalue(as.factor(label), c("0" = "Negative (0)", "1" = "Positive (1)"))) %>%
   count(label) %>%
   mutate(n_perc = round(n/nrow(labels) * 100, 2))
   
 
 plot <- apply.theme(ggplot(data = class.dist, aes(x = label, y = n, fill = label)) +
   geom_bar(width = 0.6, stat = "identity")) + 
-  geom_text(aes(label= paste("n: ", n, " (", n_perc, "0%)", sep = "")), position=position_dodge(width=1), vjust=-0.5) +
+  geom_text(aes(label= paste("n: ", n, " (", n_perc, "0%)", sep = "")), position=position_dodge(width=1), vjust=2, size = 3, color="white") +
   theme(axis.title.x = element_blank(),
                       legend.position = "None")
 
@@ -313,8 +362,8 @@ ggsave(
   device = "png",
   path = "plots",
   scale = 1,
-  width = 15,
-  height = 15,
+  width = 14,
+  height = 5,
   units = "cm",
   dpi = 300,
   limitsize = FALSE
