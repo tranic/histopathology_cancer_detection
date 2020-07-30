@@ -23,6 +23,13 @@ Our training colab notebooks can be viewed here:
 * [DenseNet121](https://colab.research.google.com/drive/17xaj6wSZunO4TxkJ_E457dwpdwy3X6Qu?usp=sharing)
 * [DenseNet201](https://colab.research.google.com/drive/1iCdhbz7fglXh07hDT9IBzGAZD5o30jLp?usp=sharing)
 
+## Training on Server
+
+``` 
+python3 -W ignore train.py -trnl ./data/train_split.csv -tstl ./data/test_split.csv -f ./data/train -o ./data -m $name -n "Refactored"
+
+```
+
 ## Experiment Documentation
 
 For documentation and comprehensibility, we stored all our runs in a Neptune.ai project [here](https://ui.neptune.ai/elangenhan/hcd-experiments/experiments?viewId=9ed5b62a-b40b-45fa-b091-81d23be85546). 
