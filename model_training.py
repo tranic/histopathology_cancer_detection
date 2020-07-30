@@ -1,39 +1,15 @@
 import os
 import uuid
 import skorch.callbacks as scb
-from skorch import NeuralNetBinaryClassifier
-from sklearn import metrics
 import neptune
 from skorch.callbacks.logging import NeptuneLogger
-
+import pandas as pd
 from data_loading import HistopathDataset
-from skorch.utils import get_dim
-from skorch.utils import is_dataset
-from torch.utils.data import DataLoader
+import torch
+from skorch.helper import predefined_split
 
 
-# this is only temporary monekey patching, we should probably inherit class and just overwrite this single method
-def custom_check_data(self, X, y):
-        # super().check_data(X, y)
-        if (
-                (y is None) and
-                (not is_dataset(X)) and
-                (self.iterator_train is DataLoader)
-        ): 
-            msg = ("No y-values are given (y=None). You must either supply a "
-                   "Dataset as X or implement your own DataLoader for "
-                   "training (and your validation) and supply it using the "
-                   "``iterator_train`` and ``iterator_valid`` parameters "
-                   "respectively.")
-            raise ValueError(msg)
-        
-        if y is not None and get_dim(y) != 1:
-            raise ValueError("The target data should be 1-dimensional.")
-
-NeuralNetBinaryClassifier.check_data = custom_check_data
-
-
-def train_model(classifier, train_labels, test_lables, file_dir, train_transform, test_transform, in_memory, output_path, logger = None):
+def train_model(classifier, train_labels, test_labels, file_dir, train_transform, test_transform, in_memory, output_path, logger = None):
 
 
     if logger:  
@@ -68,25 +44,14 @@ def train_model(classifier, train_labels, test_lables, file_dir, train_transform
         in_memory = in_memory)
     
     dataset_test = HistopathDataset(
-        label_file = os.path.abspath(test_lables),
+        label_file = os.path.abspath(test_labels),
         root_dir = os.path.abspath(file_dir),
         transform = test_transform,
         in_memory = in_memory)
-    
-    
-    target = [y for _, y in dataset_test]
-    
-    ######################
-    # Definition of Scoring Methods
-    ######################
-    
-    def test_roc_auc(net, df, target):
-        y_hat = net.predict_proba(df)
-        return metrics.roc_auc_score(target, y_hat)             
-    
-    # Test if scorings are already attached
+
+              
     classifier.callbacks.extend([
-                ('train_acc', scb.EpochScoring('accuracy',
+                 ('train_acc', scb.EpochScoring('accuracy',
                                                 name='train_acc',
                                                 lower_is_better = False,
                                                 on_train = True)),
@@ -108,13 +73,9 @@ def train_model(classifier, train_labels, test_lables, file_dir, train_transform
                                                 on_train = True)),
                 ('valid_f1', scb.EpochScoring('f1',
                                                 name='valid_f1',
-                                                lower_is_better = False,
-                                                use_caching = False)),
+                                                lower_is_better = False)),
                 ('valid_roc_auc', scb.EpochScoring('roc_auc',
                                                 name='valid_roc_auc',
-                                                lower_is_better = False)),
-                ('valid_roc_auc_test', scb.EpochScoring(test_roc_auc,
-                                                name='valid_roc_auc_test',
                                                 lower_is_better = False)),
                 ('valid_precision', scb.EpochScoring('precision',
                                                 name='valid_precision',
@@ -122,8 +83,10 @@ def train_model(classifier, train_labels, test_lables, file_dir, train_transform
                 ('valid_recall', scb.EpochScoring('recall',
                                                 name='valid_recall',
                                                 lower_is_better = False)),
-                 scb.ProgressBar()])    
+                 scb.ProgressBar()])
 
+    
+    classifier.train_split = predefined_split(dataset_test)
     
     
     if logger:
@@ -147,7 +110,10 @@ def train_model(classifier, train_labels, test_lables, file_dir, train_transform
                   classifier.max_epochs,
                   classifier.batch_size))
     
-    classifier.fit(X = dataset_train, y = None)  
+                                     
+    df = pd.read_csv(train_labels)
+    target = df["label"]                    
+    classifier.fit(X = dataset_train, y = torch.Tensor(target))
     
     ######################
     # Model Saving
