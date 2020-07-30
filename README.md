@@ -34,7 +34,7 @@ pip3 install -r requirements.txt
 **Training**
 
 ``` 
-python3 -W ignore train.py -trnl "path to train split" -tstl "path to test split" -f "path to data" -o ./data -m densenet121 -n "Neptune Text"
+python3 -W ignore train.py -trnl "path to train split" -tstl "path to test split" -f "path to images" -o "path to output" -m densenet121 -n "Neptune Text"
 ```
 
 **Testing**
