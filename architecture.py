@@ -43,16 +43,13 @@ class DenseNet121(nn.Module):
     def __init__(self):
         super(DenseNet121, self).__init__()
 
-        # Load dene121 net
         base_net = models.densenet121(pretrained=False)
 
-        # Exctract all dense121 layers for own use
         self.features = base_net.features
 
         self.dense121_relu = nn.ReLU(inplace=True)
         self.dense121_pool = nn.AdaptiveAvgPool2d((1, 1))
 
-        # maybe rename to something else, only c3 is the actually classifier
         self.classifier = nn.Sequential(nn.Linear(1024, 512),
                                         nn.Dropout(p=0.1),
                                         nn.ReLU(),
@@ -79,10 +76,8 @@ class DenseNet121Pretrained(nn.Module):
     def __init__(self):
         super(DenseNet121Pretrained, self).__init__()
 
-        # Load dene121 net
         base_net = models.densenet121(pretrained=True)
 
-        # Exctract all dense121 layers for own use
         self.features = base_net.features
 
         self.dense121_relu = nn.ReLU(inplace=True)
@@ -99,8 +94,8 @@ class DenseNet121Pretrained(nn.Module):
             param.requires_grad = True
         for param in list(self.features.denseblock4.denselayer16.parameters()):
             param.requires_grad = True
-
-        # maybe rename to something else, only c3 is the actually classifier
+            
+            
         self.classifier = nn.Sequential(nn.Linear(1024, 512),
                                         nn.Dropout(p=0.1),
                                         nn.ReLU(),
@@ -127,7 +122,6 @@ class DenseNet201(nn.Module):
     def __init__(self):
         super(DenseNet201, self).__init__()
 
-        # Load dene121 net
         base_net = models.densenet201(pretrained=False)
 
         self.features = base_net.features
@@ -161,7 +155,6 @@ class DenseNet201Pretrained(nn.Module):
     def __init__(self):
         super(DenseNet201Pretrained, self).__init__()
 
-        # Load dene121 net
         base_net = models.densenet201(pretrained=True)
 
         self.features = base_net.features
@@ -257,7 +250,6 @@ class ResNet34Pretrained(nn.Module):
     def __init__(self):
         super(ResNet34Pretrained, self).__init__()
 
-        # Load resnet34
         self.model = models.resnet34(pretrained=True)
 
         # we only want to train the last 2 multilayers (i.e., layer 3 and 4)
@@ -286,7 +278,6 @@ class ResNet152Pretrained(nn.Module):
     def __init__(self):
         super(ResNet152Pretrained, self).__init__()
 
-        # Load resnet152
         self.model = models.resnet152(pretrained=True)
 
         # we only want to train the last 2 multilayers (i.e., layer 3 and 4)
@@ -319,7 +310,6 @@ class VGG11(nn.Module):
 
         self.features = base_net.features
 
-        # self.features[0] = nn.Conv2d(3, 64, kernel_size = 3, stride = 2, padding = 1, bias = False)
 
         self.avgpool = base_net.avgpool
 
@@ -351,14 +341,9 @@ class VGG19(nn.Module):
     def __init__(self):
         super(VGG19, self).__init__()
 
-        # Load dene121 net
         base_net = models.vgg19(pretrained=False)
 
-        # Exctract all dense121 layers for own use
         self.features = base_net.features
-
-        # Change input layer of dense121 to match our input sizeß
-        # self.features[0] = nn.Conv2d(3, 64, kernel_size = 3, stride = 2, padding = 1, bias = False)
 
         self.avgpool = base_net.avgpool
 
