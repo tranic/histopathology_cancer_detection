@@ -2,6 +2,10 @@ from torch import nn
 from torchvision import models
 import torch
 
+"""
+This file contains all CNN architectures as classes inheriting from torch.nn.Module
+"""
+
 
 class LeNet(nn.Module):
     def __init__(self):
@@ -14,14 +18,13 @@ class LeNet(nn.Module):
         self.pool_1 = nn.MaxPool2d(kernel_size=2, stride=2)
         self.conv2d_2 = nn.Conv2d(6, 16, kernel_size=5)
         self.pool_3 = nn.MaxPool2d(kernel_size=2, stride=2)
-        # TODO: add more Conv Layers before
         self.linear_4 = nn.Linear(16 * 22 * 22, 120)
         self.linear_5 = nn.Linear(120, 10)
         # two outputs for softmax in final layer
         self.output = nn.Linear(10, 1)
 
     def forward(self, X, **kwargs):
-        X = X.view(-1, 3, 96, 96).float()  # previously Reshape()
+        X = X.view(-1, 3, 96, 96).float()
 
         X = self.ReLu(self.conv2d_0(X))
         X = self.pool_1(X)
@@ -71,6 +74,7 @@ class DenseNet121(nn.Module):
 
         return X
 
+
 class DenseNet121Pretrained(nn.Module):
     def __init__(self):
         super(DenseNet121Pretrained, self).__init__()
@@ -117,8 +121,8 @@ class DenseNet121Pretrained(nn.Module):
         X = self.classifier(X)
 
         return X
-    
-    
+
+
 class DenseNet201(nn.Module):
     def __init__(self):
         super(DenseNet201, self).__init__()
@@ -151,6 +155,7 @@ class DenseNet201(nn.Module):
         X = self.classifier(X)
 
         return X
+
 
 class DenseNet201Pretrained(nn.Module):
     def __init__(self):
@@ -202,7 +207,7 @@ class ResNet18_96(nn.Module):
     def __init__(self):
         super(ResNet18_96, self).__init__()
 
-        self.model = models.resnet18(pretrained = False)
+        self.model = models.resnet18(pretrained=False)
 
         # change last layer (fc) to adjust for binary classification
         n_features_in = self.model.fc.in_features
@@ -276,11 +281,12 @@ class ResNet34Pretrained(nn.Module):
         X = self.model(X)
         return X
 
+
 class ResNet152Pretrained(nn.Module):
     def __init__(self):
         super(ResNet152Pretrained, self).__init__()
 
-        # Load resnet34
+        # Load resnet152
         self.model = models.resnet152(pretrained=True)
 
         # we only want to train the last 2 multilayers (i.e., layer 3 and 4)
@@ -352,7 +358,7 @@ class VGG19(nn.Module):
         self.features = base_net.features
 
         # Change input layer of dense121 to match our input sizeß
-        #self.features[0] = nn.Conv2d(3, 64, kernel_size = 3, stride = 2, padding = 1, bias = False)
+        # self.features[0] = nn.Conv2d(3, 64, kernel_size = 3, stride = 2, padding = 1, bias = False)
 
         self.avgpool = base_net.avgpool
 
@@ -370,7 +376,6 @@ class VGG19(nn.Module):
         del base_net
 
     def forward(self, X):
-
         X = X.view(-1, 3, 96, 96).float()
 
         X = self.features(X)
